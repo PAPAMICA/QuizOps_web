@@ -230,45 +230,6 @@ def logout():
     logout_user()
     return redirect(url_for('main.index'))
 
-@bp.route('/profile/<username>')
-@login_required
-def profile(username):
-    """Affiche le profil d'un utilisateur"""
-    user = User.query.filter_by(username=username).first_or_404()
-
-    # Récupérer l'historique complet des quiz
-    history = QuizResult.query.filter_by(user_id=user.id).order_by(QuizResult.completed_at.desc()).all()
-
-    # Récupérer les configurations des catégories
-    categories = {}
-    for category, config in current_app.quiz_manager.get_categories():
-        categories[category] = config
-
-    # Calculer les statistiques
-    total_score = 0
-    perfect_count = 0
-    for result in history:
-        total_score += result.percentage
-        if result.percentage >= 100:
-            perfect_count += 1
-
-    avg_score = round(total_score / len(history), 1) if history else 0.0
-
-    # Préparer les données pour le graphique
-    chart_data = {'dates': [], 'scores': []}
-    for result in sorted(history, key=lambda x: x.completed_at):
-        chart_data['dates'].append(result.completed_at.strftime('%d/%m/%Y'))
-        chart_data['scores'].append(float(result.percentage))
-
-    return render_template('auth/profile.html',
-                         user=user,
-                         history=history,
-                         categories=categories,
-                         chart_data=chart_data,
-                         is_owner=user == current_user,
-                         avg_score=avg_score,
-                         perfect_count=perfect_count)
-
 @bp.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():

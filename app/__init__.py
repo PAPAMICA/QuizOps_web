@@ -37,6 +37,18 @@ def create_app(config_class=Config):
     from app.routes import init_app as init_routes
     init_routes(app)
 
+    from app.routes import main
+    app.register_blueprint(main.bp)
+
+    from app.routes import auth
+    app.register_blueprint(auth.bp)
+
+    from app.routes import admin
+    app.register_blueprint(admin.bp)
+
+    from app.cli import register_commands
+    register_commands(app)
+
     return app
 
 from app import models

@@ -4,6 +4,8 @@ from config import Config
 import os
 from werkzeug.security import generate_password_hash
 from datetime import datetime
+from app import create_app, db
+from app.models.user import User, QuizResult
 
 # Create a minimal application
 app = Flask(__name__)
@@ -28,6 +30,7 @@ class User(db.Model):
     email_verified = db.Column(db.Boolean, default=False)
     verification_code = db.Column(db.String(6))
     verification_code_expires = db.Column(db.DateTime)
+    is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -61,7 +64,8 @@ def create_admin_user():
     admin = User(
         username='admin',
         email='admin@quizops.local',
-        email_verified=True  # L'admin est vérifié par défaut
+        email_verified=True,  # L'admin est vérifié par défaut
+        is_admin=True
     )
     admin.set_password('admin')  # À changer en production !
     db.session.add(admin)
@@ -76,24 +80,24 @@ def init_db():
     if os.path.exists(db_path):
         print(f'Suppression de la base de données existante: {db_path}')
         os.remove(db_path)
-    
+
     print('Création des tables...')
     db.create_all()
-    
+
     # Vérification des tables créées
     tables = db.engine.table_names()
     print('\nTables créées:')
     for table in tables:
         print(f'- {table}')
-    
+
     # Vérification des tables attendues
     expected_tables = {'user', 'quiz_result', 'quiz'}
     actual_tables = set(tables)
-    
+
     if expected_tables == actual_tables:
         print('\nToutes les tables attendues ont été créées avec succès!')
         print(f'Base de données créée à: {db_path}')
-        
+
         # Création de l'utilisateur admin
         create_admin_user()
     else:
@@ -105,4 +109,4 @@ def init_db():
             print(f'\nTables inattendues: {extra}')
 
 if __name__ == '__main__':
-    init_db() 
+    init_db()

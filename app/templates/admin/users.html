@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-100">User Management</h1>
+        <a href="{{ url_for('admin.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors duration-150">
+            <i class="fas fa-chart-bar mr-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead>
+                    <tr class="bg-gray-900/50">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Username</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created At</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    {% for user in users %}
+                    <tr class="hover:bg-gray-700/50 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                            <div class="flex items-center">
+                                <div class="h-8 w-8 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30 mr-3">
+                                    <i class="fas fa-user text-indigo-400"></i>
+                                </div>
+                                {{ user.username }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ user.email }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if user.email_verified %}
+                            <span class="px-2 py-1 bg-green-900/50 text-green-400 rounded-full text-sm">Verified</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-yellow-900/50 text-yellow-400 rounded-full text-sm">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if user.is_admin %}
+                            <span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded-full text-sm">Admin</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-gray-900/50 text-gray-400 rounded-full text-sm">User</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex space-x-2">
+                                <form action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" method="POST" class="inline">
+                                    <button type="submit" 
+                                            class="text-sm px-3 py-1 rounded transition-colors duration-150 {% if user.is_admin %}bg-purple-900/50 text-purple-400 hover:bg-purple-800/50{% else %}bg-indigo-900/50 text-indigo-400 hover:bg-indigo-800/50{% endif %}"
+                                            {% if user == current_user %}disabled{% endif %}>
+                                        {% if user.is_admin %}
+                                        <i class="fas fa-user-minus mr-1"></i>Remove Admin
+                                        {% else %}
+                                        <i class="fas fa-user-shield mr-1"></i>Make Admin
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                    <button type="submit" 
+                                            class="text-sm px-3 py-1 rounded bg-red-900/50 text-red-400 hover:bg-red-800/50 transition-colors duration-150"
+                                            {% if user == current_user %}disabled{% endif %}>
+                                        <i class="fas fa-trash-alt mr-1"></i>Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

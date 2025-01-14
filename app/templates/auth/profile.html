@@ -1,201 +1,183 @@
 {% extends "base.html" %}
 
-{% block title %}{{ user.username }} - Profile{% endblock %}
-
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+<div class="container mx-auto px-4 py-8">
     <!-- En-tête du profil -->
-    <div class="bg-gray-800 shadow overflow-hidden sm:rounded-lg mb-6">
-        <div class="px-4 py-5 sm:px-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-100">{{ user.username }}</h1>
-                    <p class="mt-1 text-sm text-gray-400">Member since {{ user.created_at.strftime('%d/%m/%Y') }}</p>
-                </div>
-                {% if is_owner %}
-                <a href="{{ url_for('auth.settings') }}"
-                   class="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600">
-                    <i class="fas fa-cog mr-2"></i>
-                    Settings
-                </a>
+    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
+        <div class="flex items-center space-x-4">
+            <div class="h-20 w-20 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30">
+                <i class="fas fa-user text-3xl text-indigo-400"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-100">{{ user.username }}</h1>
+                {% if user.is_admin %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-400">
+                    <i class="fas fa-shield-alt mr-1"></i>
+                    Admin
+                </span>
                 {% endif %}
+                <p class="text-gray-400 mt-1">Member since {{ user.created_at.strftime('%B %Y') }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Statistiques -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-6">
-        <!-- Total Quiz -->
-        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-tasks fa-2x text-indigo-500"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-400 truncate">
-                                Total Quizzes
-                            </dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-100">
-                                    {{ history|length }}
-                                </div>
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
+    <!-- Statistiques globales -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-200">Total Quizzes</h3>
+                <i class="fas fa-list-check text-indigo-400"></i>
+            </div>
+            <p class="text-3xl font-bold text-indigo-400 mt-2">{{ total_quizzes }}</p>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-200">Average Score</h3>
+                <i class="fas fa-chart-line text-yellow-400"></i>
+            </div>
+            <p class="text-3xl font-bold text-yellow-400 mt-2">{{ avg_score }}%</p>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-200">Perfect Scores</h3>
+                <i class="fas fa-star text-green-400"></i>
+            </div>
+            <p class="text-3xl font-bold text-green-400 mt-2">{{ perfect_scores }}</p>
+        </div>
+    </div>
+
+    <!-- Graphique des scores -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-200 mb-4">Score History</h2>
+            <div style="height: 300px;">
+                <canvas id="scoreChart"></canvas>
             </div>
         </div>
 
-        <!-- Score Moyen -->
-        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-chart-line fa-2x text-green-500"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-400 truncate">
-                                Average Score
-                            </dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-100">
-                                    {{ "%.1f"|format(avg_score) }}%
-                                </div>
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Meilleur Score -->
-        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-trophy fa-2x text-yellow-500"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-400 truncate">
-                                Best Score
-                            </dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-100">
-                                    {{ perfect_count }} <span class="text-sm text-gray-400 ml-2">perfect scores</span>
-                                </div>
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-200 mb-4">Quiz Activity</h2>
+            <div style="height: 300px;">
+                <canvas id="activityChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Graphique d'évolution -->
-    <div class="bg-gray-800 shadow overflow-hidden sm:rounded-lg mb-6">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-700">
-            <h2 class="text-lg font-medium text-gray-100">Progress Over Time</h2>
+    <!-- Statistiques par catégorie -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {% for category, stats in category_stats.items() %}
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    {% if categories[category] and categories[category].logo %}
+                    <div class="h-10 w-10 bg-gray-700 rounded-lg p-1.5 flex items-center justify-center">
+                        <img src="{{ categories[category].logo }}" alt="{{ categories[category].name }}" class="h-7 w-7 object-contain">
+                    </div>
+                    {% else %}
+                    <div class="h-10 w-10 rounded-lg bg-indigo-900/50 flex items-center justify-center">
+                        <i class="fas fa-code text-xl text-indigo-400"></i>
+                    </div>
+                    {% endif %}
+                    <h3 class="text-lg font-semibold text-gray-200">{{ categories[category].name if categories[category] and categories[category].name else category }}</h3>
+                </div>
+                <span class="px-2 py-1 bg-indigo-900/50 text-indigo-400 rounded-full text-sm">
+                    {{ stats.count }} quiz{{ 's' if stats.count > 1 }}
+                </span>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400">Average Score</span>
+                    <span class="text-yellow-400 font-semibold">{{ stats.avg_score }}%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400">Best Score</span>
+                    <span class="text-green-400 font-semibold">{{ stats.best_score }}%</span>
+                </div>
+            </div>
         </div>
-        <div class="p-4">
-            <canvas id="progressChart" class="w-full h-64"></canvas>
-        </div>
+        {% endfor %}
     </div>
 
-    <!-- Tableau des résultats -->
-    <div class="bg-gray-800 shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-700">
-            <h2 class="text-lg font-medium text-gray-100">Quiz Results</h2>
+    <!-- Historique récent -->
+    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
+        <div class="p-6 border-b border-gray-700">
+            <h2 class="text-xl font-semibold text-gray-200">Recent Activity</h2>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-700">
-                <thead class="bg-gray-700">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Technologies
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Quiz
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Date
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Level
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Score
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Actions
-                        </th>
+                <thead>
+                    <tr class="bg-gray-900/50">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Technology</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Quiz</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Level</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-gray-800 divide-y divide-gray-700">
+                <tbody class="divide-y divide-gray-700">
                     {% for result in history %}
-                    <tr class="hover:bg-gray-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                    <tr class="hover:bg-gray-700/50 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if ',' in result.category %}
                             <div class="flex items-center space-x-2">
-                                {% if result.quiz_id.startswith('custom_') %}
-                                    {% set technologies = result.category.split(',') %}
-                                    {% for tech in technologies %}
-                                        {% set tech = tech.strip() %}
-                                        {% set tech_config = categories.get(tech, {}) %}
-                                        {% if tech_config and tech_config.get('logo') %}
-                                        <div class="relative group">
-                                            <img src="{{ tech_config['logo'] }}" alt="{{ tech }}" class="h-6 w-6">
-                                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-xs text-gray-300 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                                                {{ tech_config.get('name', tech) }}
-                                            </div>
-                                        </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% else %}
-                                    {% set category_config = categories.get(result.category, {}) %}
-                                    {% if category_config and category_config.get('logo') %}
-                                    <div class="relative group">
-                                        <img src="{{ category_config['logo'] }}" alt="{{ result.category }}" class="h-6 w-6">
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-xs text-gray-300 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                                            {{ category_config.get('name', result.category) }}
-                                        </div>
+                                {% for cat in result.category.split(',') %}
+                                    {% if categories[cat] and categories[cat].logo %}
+                                    <div class="h-8 w-8 bg-gray-700 rounded-lg p-1 flex items-center justify-center" title="{{ categories[cat].name }}">
+                                        <img src="{{ categories[cat].logo }}" alt="{{ categories[cat].name }}" class="h-6 w-6 object-contain">
                                     </div>
                                     {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="flex items-center space-x-3">
+                                {% if categories[result.category] and categories[result.category].logo %}
+                                <div class="h-8 w-8 bg-gray-700 hover:bg-gray-600 transition-colors duration-150 rounded-lg p-1 flex items-center justify-center">
+                                    <img src="{{ categories[result.category].logo }}" alt="{{ categories[result.category].name }}" class="h-6 w-6 object-contain">
+                                </div>
+                                <span class="text-gray-300">{{ categories[result.category].name }}</span>
+                                {% else %}
+                                <div class="h-8 w-8 rounded-lg bg-indigo-900/50 hover:bg-indigo-800/50 transition-colors duration-150 flex items-center justify-center">
+                                    <i class="fas fa-code text-indigo-400"></i>
+                                </div>
+                                <span class="text-gray-300">{{ result.category }}</span>
                                 {% endif %}
                             </div>
+                            {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-200">{{ result.quiz_title }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-300">{{ result.completed_at.strftime('%d/%m/%Y %H:%M') }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {% if result.level == 'beginner' %}bg-green-900/50 text-green-100 border border-green-700
-                                {% elif result.level == 'intermediate' %}bg-blue-900/50 text-blue-100 border border-blue-700
-                                {% elif result.level == 'advanced' %}bg-purple-900/50 text-purple-100 border border-purple-700
-                                {% elif result.level == 'expert' %}bg-red-900/50 text-red-100 border border-red-700
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ result.quiz_title }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium
+                                {% if result.level == 'expert' %}
+                                    bg-red-900/50 text-red-400
+                                {% elif result.level == 'advanced' %}
+                                    bg-purple-900/50 text-purple-400
+                                {% elif result.level == 'intermediate' %}
+                                    bg-blue-900/50 text-blue-400
+                                {% else %}
+                                    bg-green-900/50 text-green-400
                                 {% endif %}">
-                                {{ result.level }}
+                                {{ result.level|title }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {% if result.percentage >= 80 %}bg-green-900/50 text-green-100 border border-green-700
-                                {% elif result.percentage >= 50 %}bg-yellow-900/50 text-yellow-100 border border-yellow-700
-                                {% else %}bg-red-900/50 text-red-100 border border-red-700{% endif %}">
-                                {{ "%.1f"|format(result.percentage) }}%
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-2 py-1 {% if result.percentage >= 80 %}bg-green-900/50 text-green-400{% elif result.percentage >= 60 %}bg-yellow-900/50 text-yellow-400{% else %}bg-red-900/50 text-red-400{% endif %} rounded-full">
+                                {{ result.percentage }}%
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right">
-                            <a href="{{ url_for('quiz.show_history', quiz_id=result.quiz_id) }}"
-                               class="inline-flex items-center px-3 py-1.5 border border-gray-600 shadow-sm text-xs font-medium rounded text-gray-300 bg-gray-700 hover:bg-gray-600">
-                                <i class="fas fa-eye mr-1"></i>
-                                View
-                            </a>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            {{ result.completed_at.strftime('%Y-%m-%d %H:%M') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center space-x-2">
+                                <a href="{{ url_for('quiz.show_history', quiz_id=result.quiz_id) }}" 
+                                   class="px-3 py-1 bg-indigo-900/50 text-indigo-400 hover:bg-indigo-800/50 rounded transition-colors duration-150 inline-flex items-center">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    View
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -207,27 +189,64 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('progressChart').getContext('2d');
-    new Chart(ctx, {
+document.addEventListener('DOMContentLoaded', () => {
+    // Score Chart
+    const chartData = {
+        dates: {{ chart_data.dates|tojson|safe }},
+        scores: {{ chart_data.scores|tojson|safe }},
+        categories: {{ chart_data.categories|tojson|safe }},
+        activity: {{ chart_data.activity|tojson|safe }}
+    };
+
+    const categoryColors = {
+        'docker': 'rgb(33, 150, 243)',
+        'kubernetes': 'rgb(0, 150, 136)',
+        'linux': 'rgb(244, 67, 54)',
+        'git': 'rgb(233, 30, 99)',
+        'ansible': 'rgb(156, 39, 176)',
+        'terraform': 'rgb(103, 58, 183)',
+        'aws': 'rgb(255, 152, 0)',
+        'gcp': 'rgb(255, 87, 34)',
+        'azure': 'rgb(3, 169, 244)',
+        'devops': 'rgb(139, 195, 74)'
+    };
+
+    const pointBackgroundColors = chartData.categories.map(category => 
+        categoryColors[category.toLowerCase()] || 'rgb(129, 140, 248)'
+    );
+
+    // Score Chart
+    new Chart(document.getElementById('scoreChart'), {
         type: 'line',
         data: {
-            labels: JSON.parse('{{ chart_data.dates|tojson|safe }}'),
+            labels: chartData.dates,
             datasets: [{
-                label: '{{ "Score"|safe }}',
-                data: JSON.parse('{{ chart_data.scores|tojson|safe }}'),
-                borderColor: 'rgb(99, 102, 241)',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                label: 'Score',
+                data: chartData.scores,
+                borderColor: 'rgb(129, 140, 248)',
+                backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                pointBackgroundColor: pointBackgroundColors,
+                pointRadius: 6,
+                pointHoverRadius: 8,
                 tension: 0.4,
                 fill: true
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const score = context.raw;
+                            const category = chartData.categories[context.dataIndex];
+                            return `${category}: ${score}%`;
+                        }
+                    }
                 }
             },
             scales: {
@@ -238,12 +257,72 @@ document.addEventListener('DOMContentLoaded', function() {
                         color: 'rgba(75, 85, 99, 0.2)'
                     },
                     ticks: {
-                        color: 'rgb(156, 163, 175)'
+                        color: 'rgb(156, 163, 175)',
+                        callback: function(value) {
+                            return value + '%';
+                        }
                     }
                 },
                 x: {
                     grid: {
                         color: 'rgba(75, 85, 99, 0.2)'
+                    },
+                    ticks: {
+                        color: 'rgb(156, 163, 175)'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Activity Chart
+    new Chart(document.getElementById('activityChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(chartData.activity),
+            datasets: [{
+                label: 'Quizzes Completed',
+                data: Object.values(chartData.activity),
+                backgroundColor: 'rgba(129, 140, 248, 0.5)',
+                borderColor: 'rgb(129, 140, 248)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const count = context.raw;
+                            return `${count} quiz${count !== 1 ? 'zes' : ''}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(75, 85, 99, 0.2)'
+                    },
+                    ticks: {
+                        color: 'rgb(156, 163, 175)',
+                        stepSize: 1
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
                     },
                     ticks: {
                         color: 'rgb(156, 163, 175)'
