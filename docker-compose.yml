@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: quizops-web
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/quizops
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:postgres@db:5432/quizops
+      - SECRET_KEY=your-secret-key-here
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+      - ../QuizOps_quiz:/QuizOps_quiz
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - autoupdate=monitor
+      - traefik.enable=true
+      - traefik.http.routers.auth.rule=Host(`traefik-forward-auth`)
+      - traefik.http.routers.quizops-secure.rule=Host(`quizops.net`)
+      - traefik.http.routers.quizops-secure.tls=true
+      - traefik.http.routers.quizops-secure.tls.certresolver=http
+      - traefik.http.services.quizops.loadbalancer.server.port=8080
+      - traefik.docker.network=proxy
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    container_name: quizops-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: quizops
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+
+volumes:
+  postgres_data:
+
+networks:
+  proxy:
+    external: true
