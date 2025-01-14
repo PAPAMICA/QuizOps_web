@@ -10,9 +10,8 @@ from app.models.user import User, QuizResult
 # Create a minimal application
 app = Flask(__name__)
 
-# Ensure the database is created in the app directory
-db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app', 'quiz.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+# Configure the database URI for PostgreSQL
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:your_password@db:5432/quizops'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
@@ -76,14 +75,11 @@ def create_admin_user():
     print('Email: admin@quizops.local')
 
 def init_db():
-    # Remove existing database if it exists
-    if os.path.exists(db_path):
-        print(f'Suppression de la base de données existante: {db_path}')
-        os.remove(db_path)
-
-    print('Création des tables...')
+    # Create the database if it does not exist
     db.create_all()
 
+    print('Création des tables...')
+    
     # Vérification des tables créées
     tables = db.engine.table_names()
     print('\nTables créées:')
@@ -96,7 +92,7 @@ def init_db():
 
     if expected_tables == actual_tables:
         print('\nToutes les tables attendues ont été créées avec succès!')
-        print(f'Base de données créée à: {db_path}')
+        print(f'Base de données créée à: quizops')
 
         # Création de l'utilisateur admin
         create_admin_user()
