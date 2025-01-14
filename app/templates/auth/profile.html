@@ -62,11 +62,7 @@
                             </dt>
                             <dd class="flex items-baseline">
                                 <div class="text-2xl font-semibold text-gray-100">
-                                    {% set total_score = 0 %}
-                                    {% for result in history %}
-                                        {% set total_score = total_score + result.percentage %}
-                                    {% endfor %}
-                                    {{ "%.1f"|format(total_score / history|length if history else 0) }}%
+                                    {{ "%.1f"|format(avg_score) }}%
                                 </div>
                             </dd>
                         </dl>
@@ -89,13 +85,7 @@
                             </dt>
                             <dd class="flex items-baseline">
                                 <div class="text-2xl font-semibold text-gray-100">
-                                    {% set best_score = 0 %}
-                                    {% for result in history %}
-                                        {% if result.percentage > best_score %}
-                                            {% set best_score = result.percentage %}
-                                        {% endif %}
-                                    {% endfor %}
-                                    {{ "%.1f"|format(best_score) }}%
+                                    {{ perfect_count }} <span class="text-sm text-gray-400 ml-2">{{ _('perfect scores') }}</span>
                                 </div>
                             </dd>
                         </dl>
@@ -150,17 +140,28 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center space-x-2">
                                 {% if result.quiz_id.startswith('custom_') %}
-                                    {% set technologies = result.category.split(', ') %}
+                                    {% set technologies = result.category.split(',') %}
                                     {% for tech in technologies %}
+                                        {% set tech = tech.strip() %}
                                         {% set tech_config = categories.get(tech, {}) %}
-                                        {% if tech_config.get('logo') %}
-                                        <img src="{{ tech_config['logo'] }}" alt="{{ tech }}" class="h-6 w-6">
+                                        {% if tech_config and tech_config.get('logo') %}
+                                        <div class="relative group">
+                                            <img src="{{ tech_config['logo'] }}" alt="{{ tech }}" class="h-6 w-6">
+                                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-xs text-gray-300 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                                {{ tech_config.get('name', tech) }}
+                                            </div>
+                                        </div>
                                         {% endif %}
                                     {% endfor %}
                                 {% else %}
                                     {% set category_config = categories.get(result.category, {}) %}
-                                    {% if category_config.get('logo') %}
-                                    <img src="{{ category_config['logo'] }}" alt="{{ result.category }}" class="h-6 w-6">
+                                    {% if category_config and category_config.get('logo') %}
+                                    <div class="relative group">
+                                        <img src="{{ category_config['logo'] }}" alt="{{ result.category }}" class="h-6 w-6">
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-xs text-gray-300 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                            {{ category_config.get('name', result.category) }}
+                                        </div>
+                                    </div>
                                     {% endif %}
                                 {% endif %}
                             </div>

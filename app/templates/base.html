@@ -37,8 +37,7 @@
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
                         <a href="{{ url_for('main.index') }}" class="flex items-center space-x-3">
-                            <img src="https://send.papamica.com/f.php?h=02XHWvX3&d=1" alt="QuizOps Logo" class="h-8">
-                            <span class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-indigo-200 text-transparent bg-clip-text">QuizOps</span>
+                            <img src="https://send.papamica.com/f.php?h=02XHWvX3&d=1" alt="QuizOps Logo" class="h-16">
                         </a>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -227,7 +226,12 @@
 
     <footer class="bg-gray-800 text-gray-400 py-4 mt-auto border-t border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p>&copy; 2024 QuizOps. {{ _('All rights reserved.') }}</p>
+            <p class="mb-4">
+                <a href="mailto:mickael@papamica.com?subject=Error%20on%20QuizOps" class="text-indigo-400 hover:text-indigo-300">
+                    <i class="fas fa-bug mr-2"></i>Report an error
+                </a>
+            </p>
+            <p>&copy; 2025 QuizOps. Created by <a href="https://mickaelasseline.com" class="text-indigo-400 hover:text-indigo-300">Mickael Asseline (PAPAMICA)</a></p>
         </div>
     </footer>
 

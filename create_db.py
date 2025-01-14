@@ -33,6 +33,7 @@ class QuizResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     quiz_id = db.Column(db.String(64), nullable=False)
+    quiz_title = db.Column(db.String(128))
     category = db.Column(db.String(32), nullable=False)
     level = db.Column(db.String(16), nullable=False)
     score = db.Column(db.Integer, nullable=False)

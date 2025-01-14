@@ -281,7 +281,8 @@ def show_results(quiz_id):
             score=correct_answers,
             max_score=total_questions,
             answers=answers_data,
-            time_spent=0  # TODO: Implémenter le tracking du temps
+            time_spent=0,  # TODO: Implémenter le tracking du temps
+            quiz_title=quiz.get('title', quiz_id) if not quiz_id.startswith('custom_') else f"Custom Quiz - {quiz.get('category', '')} ({quiz.get('level', '')})"
         )
         db.session.add(quiz_result)
         db.session.commit()
@@ -367,6 +368,9 @@ def create_custom_quiz():
     if not custom_quiz:
         flash(_('Not enough questions available for the selected criteria. Please try different options.'), 'error')
         return redirect(url_for('quiz.custom_quiz'))
+    
+    # Mettre à jour la catégorie pour inclure toutes les technologies
+    custom_quiz['category'] = ','.join(technologies)
     
     # Stocker uniquement l'ID du quiz dans la session
     session['current_quiz'] = custom_quiz['id']

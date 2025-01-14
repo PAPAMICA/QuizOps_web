@@ -80,35 +80,30 @@ def profile(username):
     for category, config in current_app.quiz_manager.get_categories():
         categories[category] = config
     
+    # Calculer les statistiques
+    total_score = 0
+    perfect_count = 0
+    for result in history:
+        total_score += result.percentage
+        if result.percentage >= 100:
+            perfect_count += 1
+    
+    avg_score = round(total_score / len(history), 1) if history else 0.0
+    
     # Préparer les données pour le graphique
     chart_data = {'dates': [], 'scores': []}
     for result in sorted(history, key=lambda x: x.completed_at):
         chart_data['dates'].append(result.completed_at.strftime('%d/%m/%Y'))
-        chart_data['scores'].append(result.percentage)
-    
-    # Calculer les statistiques par catégorie
-    results_by_category = {}
-    for result in history:
-        if result.category not in results_by_category:
-            results_by_category[result.category] = {
-                'attempts': 0,
-                'total_score': 0,
-                'best_score': 0
-            }
-        
-        cat_stats = results_by_category[result.category]
-        cat_stats['attempts'] += 1
-        cat_stats['total_score'] += result.percentage
-        cat_stats['best_score'] = max(cat_stats['best_score'], result.percentage)
-        cat_stats['avg_score'] = cat_stats['total_score'] / cat_stats['attempts']
+        chart_data['scores'].append(float(result.percentage))
     
     return render_template('auth/profile.html',
                          user=user,
                          history=history,
                          categories=categories,
-                         results_by_category=results_by_category,
                          chart_data=chart_data,
-                         is_owner=user == current_user)
+                         is_owner=user == current_user,
+                         avg_score=avg_score,
+                         perfect_count=perfect_count)
 
 @bp.route('/settings', methods=['GET', 'POST'])
 @login_required
