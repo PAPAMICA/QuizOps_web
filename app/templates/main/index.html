@@ -1,117 +1,114 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Welcome to QuizIT') }}{% endblock %}
-
 {% block content %}
-<div class="relative bg-indigo-800">
+<div class="relative bg-gray-900">
+    <!-- Hero background -->
     <div class="absolute inset-0">
-        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2850&q=80" alt="">
-        <div class="absolute inset-0 bg-indigo-800 mix-blend-multiply" aria-hidden="true"></div>
+        <img class="w-full h-full object-cover opacity-20" src="https://img.papamica.com/logo/quizops_bg.png" alt="QuizOps Background">
+        <div class="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-900/80 to-gray-900"></div>
     </div>
+
+    <!-- Hero content -->
     <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-        <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">{{ _('Welcome to QuizIT') }}</h1>
-        <p class="mt-6 text-xl text-indigo-100 max-w-3xl">
-            {{ _('Test your IT knowledge with our interactive quizzes. Track your progress and improve your skills.') }}
-        </p>
-        {% if not current_user.is_authenticated %}
-        <div class="mt-10 flex space-x-4">
-            <a href="{{ url_for('auth.register') }}"
-                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50">
-                {{ _('Get Started') }}
-            </a>
-            <a href="{{ url_for('auth.login') }}"
-                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                {{ _('Sign In') }}
-            </a>
+        <div class="relative">
+            <div class="absolute inset-0 -z-10">
+                <img src="https://send.papamica.com/f.php?h=1GzpqVoU&d=1" alt="Banner Background" class="w-full h-full object-cover opacity-30 rounded-lg">
+                <div class="absolute inset-0 bg-gradient-to-r from-gray-900/90 to-gray-900/70 rounded-lg"></div>
+            </div>
+            <div class="relative p-8">
+                <img src="https://send.papamica.com/f.php?h=02XHWvX3&d=1" alt="QuizOps Logo" class="h-20 mb-8">
+                <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">{{ _('Welcome to QuizOps') }}</h1>
+                <p class="mt-6 text-xl text-gray-300 max-w-3xl">
+                    {{ _('Test your DevOps and IT knowledge with our interactive quizzes. Track your progress and improve your skills.') }}
+                </p>
+                <div class="mt-4 text-lg text-gray-400">
+                    <span class="font-semibold text-indigo-400">{{ total_quizzes }}</span> {{ _('quizzes available') }}
+                </div>
+                {% if not current_user.is_authenticated %}
+                <div class="mt-10 flex space-x-4">
+                    <a href="{{ url_for('auth.register') }}"
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        {{ _('Get Started') }}
+                    </a>
+                    <a href="{{ url_for('auth.login') }}"
+                        class="inline-flex items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-md text-gray-300 bg-gray-800/50 hover:bg-gray-800">
+                        {{ _('Sign In') }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        {% endif %}
+    </div>
+</div>
+
+<!-- Logo Carousel -->
+<div class="bg-gray-800 py-12 border-t border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h2 class="text-2xl font-semibold text-gray-100 mb-8">{{ _('Available Categories') }}</h2>
+        </div>
+        <div class="relative overflow-hidden">
+            <div class="flex space-x-12 animate-scroll">
+                {% for category, config in categories %}
+                <div class="flex flex-col items-center space-y-2 min-w-[120px]">
+                    {% if config.logo %}
+                    <div class="h-16 w-16 bg-gray-700 rounded-lg p-2 flex items-center justify-center">
+                        <img src="{{ config.logo }}" alt="{{ config.name }}" class="h-12 w-12 object-contain">
+                    </div>
+                    {% else %}
+                    <div class="h-16 w-16 rounded-lg bg-indigo-900 flex items-center justify-center">
+                        <i class="fas fa-code text-2xl text-indigo-300"></i>
+                    </div>
+                    {% endif %}
+                    <span class="text-sm font-medium text-gray-300">{{ config.name }}</span>
+                </div>
+                {% endfor %}
+                <!-- Duplicate items for infinite scroll -->
+                {% for category, config in categories %}
+                <div class="flex flex-col items-center space-y-2 min-w-[120px]">
+                    {% if config.logo %}
+                    <div class="h-16 w-16 bg-gray-700 rounded-lg p-2 flex items-center justify-center">
+                        <img src="{{ config.logo }}" alt="{{ config.name }}" class="h-12 w-12 object-contain">
+                    </div>
+                    {% else %}
+                    <div class="h-16 w-16 rounded-lg bg-indigo-900 flex items-center justify-center">
+                        <i class="fas fa-code text-2xl text-indigo-300"></i>
+                    </div>
+                    {% endif %}
+                    <span class="text-sm font-medium text-gray-300">{{ config.name }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
 
 {% if current_user.is_authenticated %}
-<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
-        <!-- Stats -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">{{ _('Total Quizzes Taken') }}</dt>
-                    <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ stats.total_quizzes|default(0) }}</dd>
-                </dl>
-            </div>
-        </div>
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">{{ _('Average Score') }}</dt>
-                    <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ stats.avg_percentage|default(0) }}%</dd>
-                </dl>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-8 flex justify-center">
-        <a href="{{ url_for('quiz.list_quizzes') }}"
-            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-            <i class="fas fa-play mr-2"></i>
-            {{ _('Take a Quiz') }}
-        </a>
-    </div>
-</div>
+<!-- Rest of the authenticated user content -->
+{% include "main/_authenticated.html" %}
 {% else %}
-<div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">{{ _('Features') }}</h3>
-            <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-                <div class="bg-white overflow-hidden shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                                <i class="fas fa-book text-white"></i>
-                            </div>
-                            <div class="ml-5">
-                                <h4 class="text-lg font-medium text-gray-900">{{ _('Various Topics') }}</h4>
-                                <p class="mt-2 text-sm text-gray-500">
-                                    {{ _('From networking to programming, we cover all IT domains.') }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white overflow-hidden shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                                <i class="fas fa-chart-line text-white"></i>
-                            </div>
-                            <div class="ml-5">
-                                <h4 class="text-lg font-medium text-gray-900">{{ _('Track Progress') }}</h4>
-                                <p class="mt-2 text-sm text-gray-500">
-                                    {{ _('Monitor your performance and see your improvement over time.') }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white overflow-hidden shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                                <i class="fas fa-globe text-white"></i>
-                            </div>
-                            <div class="ml-5">
-                                <h4 class="text-lg font-medium text-gray-900">{{ _('Multi-language') }}</h4>
-                                <p class="mt-2 text-sm text-gray-500">
-                                    {{ _('Available in multiple languages for global accessibility.') }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Rest of the features section -->
+{% include "main/_features.html" %}
 {% endif %}
+
+<style>
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-scroll {
+    animation: scroll 30s linear infinite;
+    display: flex;
+    width: max-content;
+}
+
+.animate-scroll:hover {
+    animation-play-state: paused;
+}
+</style>
 {% endblock %} 

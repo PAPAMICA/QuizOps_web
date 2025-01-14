@@ -41,11 +41,11 @@ def list_quizzes():
     """List all available quizzes"""
     categories = current_app.quiz_manager.get_categories()
     quizzes_by_category = {}
-    
+
     # Create a dictionary of quizzes by category
     for category, config in categories:
         quizzes_by_category[category] = current_app.quiz_manager.get_quizzes_by_category(category)
-    
+
     # Get best scores for each quiz
     best_scores = {}
     for category in quizzes_by_category:
@@ -57,9 +57,9 @@ def list_quizzes():
             ).order_by(QuizResult.score.desc()).first()
             if best_score:
                 best_scores[quiz['id']] = best_score.percentage
-    
-    return render_template('quiz/list.html', 
-                         categories=categories, 
+
+    return render_template('quiz/list.html',
+                         categories=categories,
                          quizzes_by_category=quizzes_by_category,
                          best_scores=best_scores)
 
@@ -71,7 +71,7 @@ def show_quiz(quiz_id):
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz:
         return render_template('404.html'), 404
-    
+
     return render_template('quiz/show.html', quiz=quiz)
 
 @bp.route('/quiz/<quiz_id>/start', methods=['POST'])
@@ -82,19 +82,19 @@ def start_quiz(quiz_id):
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz:
         return render_template('404.html'), 404
-    
+
     # Initialiser la session du quiz
     session['current_quiz'] = quiz_id
     session['current_question'] = 0
     session['answers'] = {}
-    
+
     # Mélanger l'ordre des questions
     questions = quiz['questions'].copy()
     random.shuffle(questions)
-    
+
     # Sauvegarder l'ordre des questions
     session['questions_order'] = [q['id'] for q in questions]
-    
+
     # Mélanger l'ordre des options pour chaque question
     session['shuffled_options'] = {}
     for i, question in enumerate(questions, 1):
@@ -104,19 +104,19 @@ def start_quiz(quiz_id):
         shuffled_indices = original_indices.copy()
         # Mélanger les indices
         random.shuffle(shuffled_indices)
-        
+
         # Créer les mappings dans les deux sens
         original_to_shuffled = {str(old_idx): str(new_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
         shuffled_to_original = {str(new_idx): str(old_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
-        
+
         session['shuffled_options'][str(i)] = {
             'shuffled_to_original': shuffled_to_original,
             'original_to_shuffled': original_to_shuffled
         }
-    
+
     # Sauvegarder les questions mélangées
     session['questions'] = questions
-    
+
     return redirect(url_for('quiz.show_question', quiz_id=quiz_id, question_number=1))
 
 @bp.route('/quiz/<quiz_id>/question/<int:question_number>')
@@ -127,31 +127,31 @@ def show_question(quiz_id, question_number):
     # Vérifier que l'utilisateur a bien démarré ce quiz
     if session.get('current_quiz') != quiz_id:
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
-    
+
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz or question_number < 1 or question_number > len(quiz['questions']):
         return render_template('404.html'), 404
-    
+
     # Récupérer la question dans l'ordre mélangé
     questions = session.get('questions', [])
     question = questions[question_number - 1].copy()
     mappings = session['shuffled_options'][str(question_number)]
-    
+
     # Réorganiser les options
     options = [''] * len(question['options'])
-    
+
     for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
         new_idx = int(new_idx_str)
         old_idx = int(old_idx_str)
         options[new_idx] = question['options'][old_idx]
-    
+
     question['options'] = options
-    
+
     # Mettre à jour l'index de la bonne réponse
     original_correct = question['correct_answer']
     question['correct_answer'] = int(mappings['original_to_shuffled'][str(original_correct)])
-    
-    return render_template('quiz/question.html', 
+
+    return render_template('quiz/question.html',
                          quiz=quiz,
                          question=question,
                          question_number=question_number,
@@ -164,11 +164,11 @@ def answer_question(quiz_id, question_number):
     """Traite la réponse à une question"""
     if session.get('current_quiz') != quiz_id:
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
-    
+
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz or question_number < 1 or question_number > len(quiz['questions']):
         return render_template('404.html'), 404
-    
+
     # Récupérer la réponse
     answer = request.form.get('answer')
     if answer is not None:
@@ -176,20 +176,20 @@ def answer_question(quiz_id, question_number):
         # Convertir la réponse mélangée en réponse originale
         mappings = session['shuffled_options'][str(question_number)]
         original_answer = int(mappings['shuffled_to_original'][str(answer)])
-        
+
         # S'assurer que answers est initialisé dans la session
         if 'answers' not in session:
             session['answers'] = {}
-        
+
         # Créer une copie modifiable du dictionnaire answers et stocker la réponse mélangée
         answers = dict(session['answers'])
         answers[str(question_number)] = answer  # Stocker la réponse mélangée
         session['answers'] = answers
-    
+
     # Rediriger vers la question suivante si ce n'est pas la dernière
     if question_number < len(quiz['questions']):
-        return redirect(url_for('quiz.show_question', 
-                              quiz_id=quiz_id, 
+        return redirect(url_for('quiz.show_question',
+                              quiz_id=quiz_id,
                               question_number=question_number + 1))
     else:
         return redirect(url_for('quiz.show_results', quiz_id=quiz_id))
@@ -202,43 +202,43 @@ def show_results(quiz_id):
     """Affiche les résultats du quiz"""
     if session.get('current_quiz') != quiz_id:
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
-    
+
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz:
         return render_template('404.html'), 404
-    
+
     answers = session.get('answers', {})
     if not answers:
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
-    
+
     # Récupérer les questions dans l'ordre où elles ont été présentées
     questions = session.get('questions', [])
-    
+
     # Calculer le score
     correct_answers = 0
     total_questions = len(questions)
-    
+
     # Préparer les questions avec leurs réponses pour l'affichage
     questions_with_answers = []
     answers_data = {}  # Pour stocker les réponses dans la base de données
-    
+
     for i, question in enumerate(questions, 1):
         q = question.copy()
         mappings = session['shuffled_options'][str(i)]
-        
+
         # Réorganiser les options dans l'ordre d'affichage original
         options = [''] * len(question['options'])
-        
+
         for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
             new_idx = int(new_idx_str)
             old_idx = int(old_idx_str)
             options[new_idx] = question['options'][old_idx]
-        
+
         q['options'] = options
-        
+
         # Récupérer la réponse de l'utilisateur (déjà dans l'ordre mélangé)
         user_answer = answers.get(str(i))
-        
+
         # Vérifier si la réponse est correcte en utilisant les indices originaux
         is_correct = False
         if user_answer is not None:
@@ -246,29 +246,29 @@ def show_results(quiz_id):
             is_correct = original_user_answer == question['correct_answer']
             if is_correct:
                 correct_answers += 1
-            
+
             # Stocker la réponse pour la base de données
             answers_data[question['id']] = {
                 'user_answer': original_user_answer,
                 'correct_answer': question['correct_answer'],
                 'is_correct': is_correct
             }
-        
+
         # Convertir la réponse correcte pour l'affichage
         q['correct_answer'] = int(mappings['original_to_shuffled'][str(question['correct_answer'])])
-        
+
         # Ajouter la source si elle existe
         if 'source' in question:
             q['source'] = question['source']
-        
+
         questions_with_answers.append({
             'question': q,
             'user_answer': user_answer,  # Déjà dans l'ordre mélangé
             'is_correct': is_correct
         })
-    
+
     score_percentage = round((correct_answers / total_questions) * 100)
-    
+
     try:
         # Sauvegarder le résultat dans la base de données
         quiz_result = QuizResult(
@@ -286,7 +286,7 @@ def show_results(quiz_id):
     except Exception as e:
         db.session.rollback()
         print(f"Error saving quiz result: {e}")
-    
+
     # Nettoyer la session
     session.pop('current_quiz', None)
     session.pop('current_question', None)
@@ -294,7 +294,7 @@ def show_results(quiz_id):
     session.pop('answers', None)
     session.pop('questions', None)
     session.pop('questions_order', None)
-    
+
     return render_template('quiz/results.html',
                          quiz=quiz,
                          questions=questions_with_answers,
@@ -310,7 +310,7 @@ def get_quiz_data(quiz_id):
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz:
         return jsonify({'error': 'Quiz not found'}), 404
-    
+
     return jsonify(quiz)
 
 @bp.route('/quiz/<quiz_id>/history')
@@ -321,18 +321,18 @@ def show_history(quiz_id):
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz:
         return render_template('404.html'), 404
-    
+
     # Récupérer l'historique des tentatives
     history = QuizResult.query.filter_by(
         user_id=current_user.id,
         quiz_id=quiz_id
     ).order_by(QuizResult.completed_at.desc()).all()
-    
+
     # Récupérer le meilleur score
     best_score = 0
     if history:
         best_score = max(attempt.percentage for attempt in history)
-    
+
     return render_template('quiz/history.html',
                          quiz=quiz,
                          history=history,

@@ -1,33 +1,77 @@
 <!DOCTYPE html>
-<html lang="{{ g.locale }}" class="h-full">
+<html lang="{{ g.locale }}" class="h-full bg-gray-900">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %} - QuizOps</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            '50': '#f6f6f7',
+                            '100': '#e1e3e6',
+                            '200': '#c2c5cb',
+                            '300': '#9ba0aa',
+                            '400': '#787e8a',
+                            '500': '#606672',
+                            '600': '#4c515c',
+                            '700': '#3d424a',
+                            '800': '#2e3138',
+                            '900': '#1f2126',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="flex flex-col min-h-screen bg-gray-100">
-    <nav class="bg-indigo-600 shadow-lg">
+<body class="flex flex-col min-h-screen bg-gray-900 text-gray-100">
+    <nav x-data="{ mobileMenuOpen: false, userMenuOpen: false }" class="bg-gray-800/80 backdrop-blur-sm shadow-lg border-b border-gray-700 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <!-- Logo et Navigation principale -->
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <a href="{{ url_for('main.index') }}" class="text-white text-xl font-bold">QuizOps</a>
+                        <a href="{{ url_for('main.index') }}" class="flex items-center space-x-3">
+                            <img src="https://send.papamica.com/f.php?h=02XHWvX3&d=1" alt="QuizOps Logo" class="h-8">
+                            <span class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-indigo-200 text-transparent bg-clip-text">QuizOps</span>
+                        </a>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="{{ url_for('main.index') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">{{ _('Home') }}</a>
-                        <a href="{{ url_for('quiz.list_quizzes') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">{{ _('Quizzes') }}</a>
+                        <a href="{{ url_for('main.index') }}" 
+                           class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
+                            <i class="fas fa-home mr-2"></i>
+                            {{ _('Home') }}
+                        </a>
+                        <a href="{{ url_for('quiz.list_quizzes') }}" 
+                           class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
+                            <i class="fas fa-list-check mr-2"></i>
+                            {{ _('Quizzes') }}
+                        </a>
                     </div>
                 </div>
+
+                <!-- Menu utilisateur -->
                 <div class="flex items-center">
                     {% if current_user.is_authenticated %}
-                    <div class="flex items-center space-x-4">
+                    <div class="hidden sm:flex sm:items-center sm:ml-6">
                         <div class="relative" x-data="{ open: false }" @click.away="open = false">
                             <button @click="open = !open" 
-                                    class="flex items-center text-white hover:text-gray-200 focus:outline-none">
-                                <span class="mr-2">{{ current_user.username }}</span>
-                                <i class="fas fa-chevron-down text-xs" :class="{ 'transform rotate-180': open }"></i>
+                                    class="flex items-center space-x-3 text-gray-300 hover:text-indigo-400 focus:outline-none transition-colors duration-150 group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="h-8 w-8 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30 group-hover:border-indigo-500/50 transition-colors duration-150">
+                                        <i class="fas fa-user text-sm"></i>
+                                    </div>
+                                    <div class="flex flex-col items-start">
+                                        <span class="text-sm font-medium">{{ current_user.username }}</span>
+                                        <span class="text-xs text-gray-500">{{ current_user.email }}</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'transform rotate-180': open }"></i>
                             </button>
                             <div x-show="open"
                                  x-transition:enter="transition ease-out duration-100"
@@ -36,51 +80,130 @@
                                  x-transition:leave="transition ease-in duration-75"
                                  x-transition:leave-start="transform opacity-100 scale-100"
                                  x-transition:leave-end="transform opacity-0 scale-95"
-                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                 class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-700">
                                 <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-user mr-2"></i>{{ _('Profile') }}
+                                   class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors duration-150">
+                                    <i class="fas fa-user-circle mr-2"></i>{{ _('Profile') }}
                                 </a>
                                 <a href="{{ url_for('auth.settings') }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                   class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors duration-150">
                                     <i class="fas fa-cog mr-2"></i>{{ _('Settings') }}
                                 </a>
-                                <div class="border-t border-gray-100"></div>
+                                <div class="border-t border-gray-700"></div>
                                 <a href="{{ url_for('auth.logout') }}" 
-                                   class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                   class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors duration-150">
                                     <i class="fas fa-sign-out-alt mr-2"></i>{{ _('Logout') }}
                                 </a>
                             </div>
                         </div>
                     </div>
                     {% else %}
-                    <div class="space-x-4">
-                        <a href="{{ url_for('auth.login') }}" class="bg-white text-indigo-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50">{{ _('Login') }}</a>
-                        <a href="{{ url_for('auth.register') }}" class="bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-800">{{ _('Register') }}</a>
+                    <div class="hidden sm:flex sm:items-center sm:space-x-4">
+                        <a href="{{ url_for('auth.login') }}" 
+                           class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            {{ _('Login') }}
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" 
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-150">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            {{ _('Register') }}
+                        </a>
                     </div>
                     {% endif %}
+
+                    <!-- Menu mobile -->
+                    <div class="flex items-center sm:hidden">
+                        <button @click="mobileMenuOpen = !mobileMenuOpen" 
+                                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                            <i class="fas" :class="{'fa-bars': !mobileMenuOpen, 'fa-times': mobileMenuOpen}"></i>
+                        </button>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Menu mobile -->
+            <div x-show="mobileMenuOpen" 
+                 x-transition:enter="transition ease-out duration-100 transform"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-75 transform"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="sm:hidden">
+                <div class="pt-2 pb-3 space-y-1">
+                    <a href="{{ url_for('main.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
+                        <i class="fas fa-home mr-2"></i>{{ _('Home') }}
+                    </a>
+                    <a href="{{ url_for('quiz.list_quizzes') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
+                        <i class="fas fa-list-check mr-2"></i>{{ _('Quizzes') }}
+                    </a>
+                </div>
+                {% if current_user.is_authenticated %}
+                <div class="pt-4 pb-3 border-t border-gray-700">
+                    <div class="flex items-center px-4">
+                        <div class="flex-shrink-0">
+                            <div class="h-10 w-10 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-base font-medium text-gray-300">{{ current_user.username }}</div>
+                            <div class="text-sm font-medium text-gray-500">{{ current_user.email }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 space-y-1">
+                        <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
+                           class="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
+                            <i class="fas fa-user-circle mr-2"></i>{{ _('Profile') }}
+                        </a>
+                        <a href="{{ url_for('auth.settings') }}" 
+                           class="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
+                            <i class="fas fa-cog mr-2"></i>{{ _('Settings') }}
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" 
+                           class="block px-4 py-2 text-base font-medium text-red-400 hover:text-red-300 hover:bg-gray-700">
+                            <i class="fas fa-sign-out-alt mr-2"></i>{{ _('Logout') }}
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="pt-4 pb-3 border-t border-gray-700">
+                    <div class="space-y-1">
+                        <a href="{{ url_for('auth.login') }}" 
+                           class="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
+                            <i class="fas fa-sign-in-alt mr-2"></i>{{ _('Login') }}
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" 
+                           class="block px-4 py-2 text-base font-medium text-indigo-400 hover:text-indigo-300 hover:bg-gray-700">
+                            <i class="fas fa-user-plus mr-2"></i>{{ _('Register') }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </nav>
 
     <main class="flex-grow">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
         <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
             {% for category, message in messages %}
-            <div class="mb-4 p-4 rounded-md {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+            <div class="mb-4 p-4 rounded-md {% if category == 'error' %}bg-red-900/50 text-red-300 border border-red-700{% else %}bg-green-900/50 text-green-300 border border-green-700{% endif %}">
                 {{ message }}
             </div>
             {% endfor %}
-            {% endif %}
-            {% endwith %}
-
-            {% block content %}{% endblock %}
         </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-gray-800 text-white py-4 mt-auto">
+    <footer class="bg-gray-800 text-gray-400 py-4 mt-auto border-t border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p>&copy; 2024 QuizOps. {{ _('All rights reserved.') }}</p>
         </div>
