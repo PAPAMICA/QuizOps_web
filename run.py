@@ -12,12 +12,6 @@ def init_db():
         db.create_all()
         print('Database initialized.')
 
-@app.cli.command()
-def compile_translations():
-    """Compile all translations."""
-    import os
-    os.system('pybabel compile -d app/translations')
-    print('Translations compiled.')
 
 @app.shell_context_processor
 def make_shell_context():

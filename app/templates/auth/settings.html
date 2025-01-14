@@ -4,58 +4,58 @@
 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
     <div class="bg-gray-800 shadow overflow-hidden sm:rounded-lg border border-gray-700">
         <div class="px-4 py-5 sm:px-6 border-b border-gray-700">
-            <h1 class="text-2xl font-bold text-gray-100">{{ _('Settings') }}</h1>
-            <p class="mt-1 text-sm text-gray-400">{{ _('Manage your account settings and preferences.') }}</p>
+            <h1 class="text-2xl font-bold text-gray-100">Settings</h1>
+            <p class="mt-1 text-sm text-gray-400">Manage your account settings and preferences.</p>
         </div>
 
         <div class="px-4 py-5 sm:p-6 space-y-8">
             <!-- Mise à jour de l'email -->
             <div>
-                <h2 class="text-lg font-medium text-gray-100 mb-4">{{ _('Email Settings') }}</h2>
+                <h2 class="text-lg font-medium text-gray-100 mb-4">Email Settings</h2>
                 <form method="POST" class="space-y-4">
                     <input type="hidden" name="action" value="update_email">
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-300">{{ _('Email Address') }}</label>
+                        <label for="email" class="block text-sm font-medium text-gray-300">Email Address</label>
                         <input type="email" name="email" id="email" value="{{ current_user.email }}"
                                class="mt-1 block w-full border-dark-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-dark-800 text-gray-100">
                     </div>
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                        {{ _('Update Email') }}
+                        Update Email
                     </button>
                 </form>
             </div>
 
             <!-- Changement de mot de passe -->
             <div class="pt-8 border-t border-gray-700">
-                <h2 class="text-lg font-medium text-gray-100 mb-4">{{ _('Change Password') }}</h2>
+                <h2 class="text-lg font-medium text-gray-100 mb-4">Change Password</h2>
                 <form method="POST" class="space-y-4">
                     <input type="hidden" name="action" value="update_password">
                     <div>
-                        <label for="current_password" class="block text-sm font-medium text-gray-300">{{ _('Current Password') }}</label>
+                        <label for="current_password" class="block text-sm font-medium text-gray-300">Current Password</label>
                         <input type="password" name="current_password" id="current_password" required
                                class="mt-1 block w-full border-dark-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-dark-800 text-gray-100">
                     </div>
                     <div>
-                        <label for="new_password" class="block text-sm font-medium text-gray-300">{{ _('New Password') }}</label>
+                        <label for="new_password" class="block text-sm font-medium text-gray-300">New Password</label>
                         <input type="password" name="new_password" id="new_password" required
                                class="mt-1 block w-full border-dark-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-dark-800 text-gray-100">
                     </div>
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                        {{ _('Update Password') }}
+                        Update Password
                     </button>
                 </form>
             </div>
 
             <!-- Lien vers le profil public -->
             <div class="pt-8 border-t border-gray-700">
-                <h2 class="text-lg font-medium text-gray-100 mb-4">{{ _('Public Profile') }}</h2>
-                <p class="text-sm text-gray-400 mb-4">{{ _('Share your profile with others using this link:') }}</p>
+                <h2 class="text-lg font-medium text-gray-100 mb-4">Public Profile</h2>
+                <p class="text-sm text-gray-400 mb-4">Share your profile with others using this link:</p>
                 <div class="flex items-center space-x-4">
                     <input type="text" readonly value="{{ url_for('auth.profile', username=current_user.username, _external=True) }}"
                            class="flex-1 block w-full border-dark-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-dark-800 text-gray-100">
                     <button onclick="copyProfileUrl()" class="inline-flex items-center px-4 py-2 border border-dark-600 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-dark-700 hover:bg-dark-600">
                         <i class="fas fa-copy mr-2"></i>
-                        {{ _('Copy') }}
+                        Copy
                     </button>
                 </div>
             </div>
@@ -67,7 +67,7 @@
 function copyProfileUrl() {
     const url = "{{ url_for('auth.profile', username=current_user.username, _external=True) }}";
     navigator.clipboard.writeText(url).then(() => {
-        alert("{{ _('Profile URL copied to clipboard!') }}");
+        alert("Profile URL copied to clipboard!");
     });
 }
 </script>

@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Quiz History') }} - {{ quiz.title }}{% endblock %}
+{% block title %}Quiz History - {{ quiz.title }}{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between mb-8">
         <h1 class="text-3xl font-bold text-gray-100">
-            {{ _('Quiz History') }} - {{ quiz.title }}
+            Quiz History - {{ quiz.title }}
         </h1>
         <div class="flex space-x-4">
             <a href="{{ url_for('quiz.list_quizzes') }}"
                class="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600">
                 <i class="fas fa-arrow-left mr-2"></i>
-                {{ _('Back to Quizzes') }}
+                Back to Quizzes
             </a>
             <form action="{{ url_for('quiz.start_quiz', quiz_id=quiz.id) }}" method="post" class="inline">
                 <button type="submit"
                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                     <i class="fas fa-play mr-2"></i>
-                    {{ _('Start New Attempt') }}
+                    Start New Attempt
                 </button>
             </form>
         </div>
@@ -27,8 +27,8 @@
     {% if history %}
     <div class="bg-gray-800 shadow overflow-hidden sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6 border-b border-gray-700">
-            <h2 class="text-lg font-medium text-gray-100">{{ _('Your Attempts') }}</h2>
-            <p class="mt-1 text-sm text-gray-400">{{ _('Best score:') }} 
+            <h2 class="text-lg font-medium text-gray-100">Your Attempts</h2>
+            <p class="mt-1 text-sm text-gray-400">Best score: 
                 <span class="font-medium {% if best_score >= 80 %}text-green-400{% elif best_score >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">
                     {{ "%.1f"|format(best_score) }}%
                 </span>
@@ -54,14 +54,14 @@
                                 {% if attempt.time_spent %}
                                 <span class="text-sm text-gray-400">
                                     <i class="far fa-clock mr-1"></i>
-                                    {{ (attempt.time_spent / 60)|round|int }} {{ _('min') }}
+                                    {{ (attempt.time_spent / 60)|round|int }} min
                                 </span>
                                 {% endif %}
                             </div>
                             <button onclick="toggleDetails('attempt-{{ attempt.id }}', 'icon-{{ attempt.id }}')"
                                     class="inline-flex items-center px-3 py-1.5 border border-gray-600 shadow-sm text-xs font-medium rounded text-gray-300 bg-gray-700 hover:bg-gray-600">
                                 <i id="icon-{{ attempt.id }}" class="fas fa-chevron-down mr-1 transform transition-transform duration-200"></i>
-                                {{ _('Details') }}
+                                Details
                             </button>
                         </div>
                         <div id="attempt-{{ attempt.id }}" class="hidden mt-4 border-t border-gray-600 pt-4">
@@ -74,24 +74,24 @@
                                 {% if answer %}
                                 <div class="ml-4">
                                     <p class="text-sm text-gray-300">
-                                        <span class="font-medium">{{ _('Your answer:') }}</span>
+                                        <span class="font-medium">Your answer:</span>
                                         <span class="{% if answer.is_correct %}text-green-400{% else %}text-red-400{% endif %}">
                                             {{ question.options[answer.user_answer] }}
                                         </span>
                                     </p>
                                     {% if not answer.is_correct %}
                                     <p class="text-sm text-gray-300 mt-1">
-                                        <span class="font-medium">{{ _('Correct answer:') }}</span>
+                                        <span class="font-medium">Correct answer:</span>
                                         <span class="text-green-400">
                                             {{ question.options[answer.correct_answer] }}
                                         </span>
                                     </p>
                                     <p class="text-sm text-gray-300 mt-1">
-                                        <span class="font-medium">{{ _('Explanation:') }}</span>
+                                        <span class="font-medium">Explanation:</span>
                                         {{ question.explanation }}
                                     </p>
                                     <p class="text-sm text-gray-400 mt-1">
-                                        <span class="font-medium">{{ _('Source:') }}</span>
+                                        <span class="font-medium">Source:</span>
                                         {{ question.source }}
                                     </p>
                                     {% endif %}
@@ -109,9 +109,9 @@
     {% else %}
     <div class="bg-gray-800 shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium text-gray-100">{{ _('No attempts yet') }}</h3>
+            <h3 class="text-lg font-medium text-gray-100">No attempts yet</h3>
             <div class="mt-2 max-w-xl text-sm text-gray-400">
-                <p>{{ _('Start your first attempt to see your results here.') }}</p>
+                <p>Start your first attempt to see your results here.</p>
             </div>
         </div>
     </div>

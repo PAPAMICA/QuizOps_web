@@ -24,7 +24,7 @@
         <div class="px-4 py-4 sm:px-6 bg-gray-700 border-b border-gray-700">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-gray-300">
-                    {{ _('Question') }} {{ question_number }}/{{ total_questions }}
+                    Question {{ question_number }}/{{ total_questions }}
                 </span>
                 <div class="w-2/3 bg-gray-600 rounded-full h-2.5 overflow-hidden">
                     {% set progress = (question_number / total_questions * 100) | round %}
@@ -64,7 +64,7 @@
                         <div class="mt-6 flex justify-center">
                             <button type="submit"
                                     class="inline-flex items-center px-8 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
-                                {{ _('Submit Answer') }}
+                                Submit Answer
                                 <i class="fas fa-arrow-right ml-2"></i>
                             </button>
                         </div>

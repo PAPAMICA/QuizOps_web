@@ -30,21 +30,21 @@
                 </div>
                 <h2 class="text-xl font-semibold text-gray-100 mb-2">
                     {% if score_percentage >= 80 %}
-                        {{ _('Excellent!') }}
+                        Excellent!
                     {% elif score_percentage >= 50 %}
-                        {{ _('Good job!') }}
+                        Good job!
                     {% else %}
-                        {{ _('Keep practicing!') }}
+                        Keep practicing!
                     {% endif %}
                 </h2>
                 <p class="text-gray-400">
-                    {{ _('You got %(correct)s out of %(total)s questions correct', correct=correct_answers, total=total_questions) }}
+                    You got {{ correct_answers }} out of {{ total_questions }} questions correct
                 </p>
             </div>
 
             <!-- Détails des réponses -->
             <div class="mt-8">
-                <h3 class="text-lg font-medium text-gray-100 mb-4">{{ _('Detailed Results') }}</h3>
+                <h3 class="text-lg font-medium text-gray-100 mb-4">Detailed Results</h3>
                 <div class="space-y-4">
                     {% for qa in questions %}
                     <div class="bg-gray-700 rounded-lg p-4 border border-gray-600">
@@ -62,25 +62,25 @@
                                 </p>
                                 <div class="mt-2">
                                     <p class="text-sm text-gray-300">
-                                        <span class="font-medium">{{ _('Your answer:') }}</span>
+                                        <span class="font-medium">Your answer:</span>
                                         {{ qa.question.options[qa.user_answer] }}
                                     </p>
                                     {% if not qa.is_correct %}
                                     <p class="text-sm text-gray-300 mt-1">
-                                        <span class="font-medium">{{ _('Correct answer:') }}</span>
+                                        <span class="font-medium">Correct answer:</span>
                                         {{ qa.question.options[qa.question.correct_answer] }}
                                     </p>
                                     {% endif %}
                                     
                                     <!-- Explication -->
                                     <div class="mt-4 bg-gray-800 p-4 rounded-lg border border-gray-600">
-                                        <h4 class="text-sm font-medium text-indigo-300 mb-2">{{ _('Explanation:') }}</h4>
+                                        <h4 class="text-sm font-medium text-indigo-300 mb-2">Explanation:</h4>
                                         <p class="text-sm text-gray-300">
                                             {{ qa.question.explanation }}
                                         </p>
                                         {% if qa.question.source %}
                                         <div class="mt-2 text-xs text-gray-400">
-                                            <span class="font-medium">{{ _('Source:') }}</span>
+                                            <span class="font-medium">Source:</span>
                                             {% set source_parts = qa.question.source.split(' - ') %}
                                             {% if source_parts|length > 1 %}
                                                 {{ source_parts[0] }} - 
@@ -109,13 +109,13 @@
                 <a href="{{ url_for('quiz.list_quizzes') }}"
                    class="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600">
                     <i class="fas fa-list mr-2"></i>
-                    {{ _('Back to Quizzes') }}
+                    Back to Quizzes
                 </a>
                 <form action="{{ url_for('quiz.start_quiz', quiz_id=quiz.id) }}" method="post">
                     <button type="submit"
                             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                         <i class="fas fa-redo mr-2"></i>
-                        {{ _('Try Again') }}
+                        Try Again
                     </button>
                 </form>
             </div>

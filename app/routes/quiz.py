@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, current_app, jsonify, request, redirect, url_for, session, g, flash
 from flask_login import login_required, current_user
-from flask_babel import gettext as _
 from app.models import QuizResult, Quiz
 from app import db
 import random
@@ -352,30 +351,30 @@ def custom_quiz():
 def create_custom_quiz():
     technologies = request.form.getlist('technologies[]')
     level = request.form.get('level')
-    
+
     if not technologies:
-        flash(_('Please select at least one technology.'), 'error')
+        flash('Please select at least one technology.', 'error')
         return redirect(url_for('quiz.custom_quiz'))
-    
+
     if not level:
-        flash(_('Please select a difficulty level.'), 'error')
+        flash('Please select a difficulty level.', 'error')
         return redirect(url_for('quiz.custom_quiz'))
-    
+
     # Créer le quiz personnalisé
     quiz_manager = current_app.quiz_manager
     custom_quiz = quiz_manager.create_custom_quiz(technologies, level)
-    
+
     if not custom_quiz:
-        flash(_('Not enough questions available for the selected criteria. Please try different options.'), 'error')
+        flash('Not enough questions available for the selected criteria. Please try different options.', 'error')
         return redirect(url_for('quiz.custom_quiz'))
-    
+
     # Mettre à jour la catégorie pour inclure toutes les technologies
     custom_quiz['category'] = ','.join(technologies)
-    
+
     # Stocker uniquement l'ID du quiz dans la session
     session['current_quiz'] = custom_quiz['id']
     session['start_time'] = datetime.utcnow().timestamp()
-    
+
     # Démarrer directement le quiz sans redirection vers start_quiz
     session['current_question'] = 0
     session['answers'] = {}
@@ -402,5 +401,5 @@ def create_custom_quiz():
             'shuffled_to_original': shuffled_to_original,
             'original_to_shuffled': original_to_shuffled
         }
-    
+
     return redirect(url_for('quiz.show_question', quiz_id=custom_quiz['id'], question_number=1))

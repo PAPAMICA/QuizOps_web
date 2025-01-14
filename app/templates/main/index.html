@@ -17,22 +17,22 @@
             </div>
             <div class="relative p-8">
                 <img src="https://send.papamica.com/f.php?h=02XHWvX3&d=1" alt="QuizOps Logo" class="h-20 mb-8">
-                <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">{{ _('Welcome to QuizOps') }}</h1>
+                <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Welcome to QuizOps</h1>
                 <p class="mt-6 text-xl text-gray-300 max-w-3xl">
-                    {{ _('Test your DevOps and IT knowledge with our interactive quizzes. Track your progress and improve your skills.') }}
+                    Test your DevOps and IT knowledge with our interactive quizzes. Track your progress and improve your skills.
                 </p>
                 <div class="mt-4 text-lg text-gray-400">
-                    <span class="font-semibold text-indigo-400">{{ total_quizzes }}</span> {{ _('quizzes available') }}
+                    <span class="font-semibold text-indigo-400">{{ total_quizzes }}</span> quizzes available
                 </div>
                 {% if not current_user.is_authenticated %}
                 <div class="mt-10 flex space-x-4">
                     <a href="{{ url_for('auth.register') }}"
                         class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                        {{ _('Get Started') }}
+                        Get Started
                     </a>
                     <a href="{{ url_for('auth.login') }}"
                         class="inline-flex items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-md text-gray-300 bg-gray-800/50 hover:bg-gray-800">
-                        {{ _('Sign In') }}
+                        Sign In
                     </a>
                 </div>
                 {% endif %}
@@ -45,7 +45,7 @@
 <div class="bg-gray-800 py-12 border-t border-gray-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-            <h2 class="text-2xl font-semibold text-gray-100 mb-8">{{ _('Available Categories') }}</h2>
+            <h2 class="text-2xl font-semibold text-gray-100 mb-8">Available Categories</h2>
         </div>
         <div class="relative overflow-hidden">
             <div class="flex space-x-12 animate-scroll">

@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from config import Config
 import os
 from werkzeug.security import generate_password_hash
+from datetime import datetime
 
 # Create a minimal application
 app = Flask(__name__)
@@ -24,6 +25,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(128))
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     quiz_results = db.relationship('QuizResult', backref='user', lazy=True)
+    email_verified = db.Column(db.Boolean, default=False)
+    verification_code = db.Column(db.String(6))
+    verification_code_expires = db.Column(db.DateTime)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -56,7 +60,8 @@ class Quiz(db.Model):
 def create_admin_user():
     admin = User(
         username='admin',
-        email='admin@quizops.local'
+        email='admin@quizops.local',
+        email_verified=True  # L'admin est vérifié par défaut
     )
     admin.set_password('admin')  # À changer en production !
     db.session.add(admin)

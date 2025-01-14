@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ g.locale }}" class="h-full bg-gray-900">
+<html lang="en" class="h-full bg-gray-900">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,23 +44,23 @@
                         <a href="{{ url_for('main.index') }}" 
                            class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
                             <i class="fas fa-home mr-2"></i>
-                            {{ _('Home') }}
+                            Home
                         </a>
                         <a href="{{ url_for('quiz.list_quizzes') }}" 
                            class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
                             <i class="fas fa-list-check mr-2"></i>
-                            {{ _('Quizzes') }}
+                            Quizzes
                         </a>
                         <a href="{{ url_for('quiz.custom_quiz') }}" 
                            class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
                             <i class="fas fa-magic mr-2"></i>
-                            {{ _('Custom Quiz') }}
+                            Custom Quiz
                         </a>
                         {% if current_user.is_authenticated %}
                         <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
                            class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
                             <i class="fas fa-chart-line mr-2"></i>
-                            {{ _('My Stats') }}
+                            My Stats
                         </a>
                         {% endif %}
                     </div>
@@ -94,16 +94,16 @@
                                  class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-700">
                                 <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
                                    class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors duration-150">
-                                    <i class="fas fa-user-circle mr-2"></i>{{ _('Profile') }}
+                                    <i class="fas fa-user-circle mr-2"></i>Profile
                                 </a>
                                 <a href="{{ url_for('auth.settings') }}" 
                                    class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors duration-150">
-                                    <i class="fas fa-cog mr-2"></i>{{ _('Settings') }}
+                                    <i class="fas fa-cog mr-2"></i>Settings
                                 </a>
                                 <div class="border-t border-gray-700"></div>
                                 <a href="{{ url_for('auth.logout') }}" 
                                    class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors duration-150">
-                                    <i class="fas fa-sign-out-alt mr-2"></i>{{ _('Logout') }}
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
                                 </a>
                             </div>
                         </div>
@@ -113,12 +113,12 @@
                         <a href="{{ url_for('auth.login') }}" 
                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
                             <i class="fas fa-sign-in-alt mr-2"></i>
-                            {{ _('Login') }}
+                            Login
                         </a>
                         <a href="{{ url_for('auth.register') }}" 
                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-150">
                             <i class="fas fa-user-plus mr-2"></i>
-                            {{ _('Register') }}
+                            Register
                         </a>
                     </div>
                     {% endif %}
@@ -145,20 +145,20 @@
                 <div class="pt-2 pb-3 space-y-1">
                     <a href="{{ url_for('main.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
-                        <i class="fas fa-home mr-2"></i>{{ _('Home') }}
+                        <i class="fas fa-home mr-2"></i>Home
                     </a>
                     <a href="{{ url_for('quiz.list_quizzes') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
-                        <i class="fas fa-list-check mr-2"></i>{{ _('Quizzes') }}
+                        <i class="fas fa-list-check mr-2"></i>Quizzes
                     </a>
                     <a href="{{ url_for('quiz.custom_quiz') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
-                        <i class="fas fa-magic mr-2"></i>{{ _('Custom Quiz') }}
+                        <i class="fas fa-magic mr-2"></i>Custom Quiz
                     </a>
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
-                        <i class="fas fa-chart-line mr-2"></i>{{ _('My Stats') }}
+                        <i class="fas fa-chart-line mr-2"></i>My Stats
                     </a>
                     {% endif %}
                 </div>
@@ -178,15 +178,15 @@
                     <div class="mt-3 space-y-1">
                         <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
                            class="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
-                            <i class="fas fa-user-circle mr-2"></i>{{ _('Profile') }}
+                            <i class="fas fa-user-circle mr-2"></i>Profile
                         </a>
                         <a href="{{ url_for('auth.settings') }}" 
                            class="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
-                            <i class="fas fa-cog mr-2"></i>{{ _('Settings') }}
+                            <i class="fas fa-cog mr-2"></i>Settings
                         </a>
                         <a href="{{ url_for('auth.logout') }}" 
                            class="block px-4 py-2 text-base font-medium text-red-400 hover:text-red-300 hover:bg-gray-700">
-                            <i class="fas fa-sign-out-alt mr-2"></i>{{ _('Logout') }}
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
                         </a>
                     </div>
                 </div>
@@ -195,11 +195,11 @@
                     <div class="space-y-1">
                         <a href="{{ url_for('auth.login') }}" 
                            class="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
-                            <i class="fas fa-sign-in-alt mr-2"></i>{{ _('Login') }}
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
                         </a>
                         <a href="{{ url_for('auth.register') }}" 
                            class="block px-4 py-2 text-base font-medium text-indigo-400 hover:text-indigo-300 hover:bg-gray-700">
-                            <i class="fas fa-user-plus mr-2"></i>{{ _('Register') }}
+                            <i class="fas fa-user-plus mr-2"></i>Register
                         </a>
                     </div>
                 </div>

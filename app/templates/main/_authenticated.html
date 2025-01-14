@@ -4,7 +4,7 @@
         <div class="bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-700">
             <div class="px-4 py-5 sm:p-6">
                 <dl>
-                    <dt class="text-sm font-medium text-gray-400 truncate">{{ _('Total Quizzes Taken') }}</dt>
+                    <dt class="text-sm font-medium text-gray-400 truncate">Total Quizzes Taken</dt>
                     <dd class="mt-1 text-3xl font-semibold text-gray-100">{{ stats.total_quizzes|default(0) }}</dd>
                 </dl>
             </div>
@@ -12,7 +12,7 @@
         <div class="bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-700">
             <div class="px-4 py-5 sm:p-6">
                 <dl>
-                    <dt class="text-sm font-medium text-gray-400 truncate">{{ _('Average Score') }}</dt>
+                    <dt class="text-sm font-medium text-gray-400 truncate">Average Score</dt>
                     <dd class="mt-1 text-3xl font-semibold text-gray-100">{{ stats.avg_percentage|default(0) }}%</dd>
                 </dl>
             </div>
@@ -23,7 +23,7 @@
         <a href="{{ url_for('quiz.list_quizzes') }}"
             class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
             <i class="fas fa-play mr-2"></i>
-            {{ _('Take a Quiz') }}
+            Take a Quiz
         </a>
     </div>
 </div> 

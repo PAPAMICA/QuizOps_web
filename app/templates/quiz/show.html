@@ -32,19 +32,19 @@
                         <button type="submit"
                                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                             <i class="fas fa-play mr-2"></i>
-                            {{ _('Start Quiz') }}
+                            Start Quiz
                         </button>
                     </form>
                     <a href="{{ url_for('quiz.show_history', quiz_id=quiz.id) }}"
                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         <i class="fas fa-history mr-2"></i>
-                        {{ _('View History') }}
+                        View History
                     </a>
                 </div>
                 <a href="{{ url_for('quiz.list_quizzes') }}"
                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     <i class="fas fa-arrow-left mr-2"></i>
-                    {{ _('Back to List') }}
+                    Back to List
                 </a>
             </div>
         </div>
