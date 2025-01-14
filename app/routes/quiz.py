@@ -1,12 +1,14 @@
-from flask import Blueprint, render_template, current_app, jsonify, request, redirect, url_for, session, g
+from flask import Blueprint, render_template, current_app, jsonify, request, redirect, url_for, session, g, flash
 from flask_login import login_required, current_user
 from flask_babel import gettext as _
-from app.models import QuizResult
+from app.models import QuizResult, Quiz
 from app import db
 import random
 from functools import wraps
 from sqlalchemy.exc import OperationalError
 import time
+import uuid
+from datetime import datetime
 
 bp = Blueprint('quiz', __name__)
 
@@ -74,7 +76,7 @@ def show_quiz(quiz_id):
 
     return render_template('quiz/show.html', quiz=quiz)
 
-@bp.route('/quiz/<quiz_id>/start', methods=['POST'])
+@bp.route('/quiz/<quiz_id>/start', methods=['GET', 'POST'])
 @login_required
 @set_locale
 def start_quiz(quiz_id):
@@ -337,3 +339,64 @@ def show_history(quiz_id):
                          quiz=quiz,
                          history=history,
                          best_score=best_score)
+
+@bp.route('/custom', methods=['GET'])
+@login_required
+def custom_quiz():
+    categories = dict(current_app.quiz_manager.get_categories())
+    return render_template('quiz/custom.html', categories=categories)
+
+@bp.route('/custom/create', methods=['POST'])
+@login_required
+def create_custom_quiz():
+    technologies = request.form.getlist('technologies[]')
+    level = request.form.get('level')
+    
+    if not technologies:
+        flash(_('Please select at least one technology.'), 'error')
+        return redirect(url_for('quiz.custom_quiz'))
+    
+    if not level:
+        flash(_('Please select a difficulty level.'), 'error')
+        return redirect(url_for('quiz.custom_quiz'))
+    
+    # Créer le quiz personnalisé
+    quiz_manager = current_app.quiz_manager
+    custom_quiz = quiz_manager.create_custom_quiz(technologies, level)
+    
+    if not custom_quiz:
+        flash(_('Not enough questions available for the selected criteria. Please try different options.'), 'error')
+        return redirect(url_for('quiz.custom_quiz'))
+    
+    # Stocker uniquement l'ID du quiz dans la session
+    session['current_quiz'] = custom_quiz['id']
+    session['start_time'] = datetime.utcnow().timestamp()
+    
+    # Démarrer directement le quiz sans redirection vers start_quiz
+    session['current_question'] = 0
+    session['answers'] = {}
+
+    # Mélanger l'ordre des questions
+    questions = custom_quiz['questions'].copy()
+    random.shuffle(questions)
+
+    # Sauvegarder l'ordre des questions
+    session['questions_order'] = [q['id'] for q in questions]
+    session['questions'] = questions
+
+    # Mélanger l'ordre des options pour chaque question
+    session['shuffled_options'] = {}
+    for i, question in enumerate(questions, 1):
+        original_indices = list(range(len(question['options'])))
+        shuffled_indices = original_indices.copy()
+        random.shuffle(shuffled_indices)
+
+        original_to_shuffled = {str(old_idx): str(new_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
+        shuffled_to_original = {str(new_idx): str(old_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
+
+        session['shuffled_options'][str(i)] = {
+            'shuffled_to_original': shuffled_to_original,
+            'original_to_shuffled': original_to_shuffled
+        }
+    
+    return redirect(url_for('quiz.show_question', quiz_id=custom_quiz['id'], question_number=1))

@@ -67,51 +67,45 @@ def logout():
     return redirect(url_for('main.index'))
 
 @bp.route('/profile/<username>')
+@login_required
 def profile(username):
-    """Public profile page"""
+    """Affiche le profil d'un utilisateur"""
     user = User.query.filter_by(username=username).first_or_404()
-    quiz_results = QuizResult.query.filter_by(user_id=user.id).order_by(QuizResult.completed_at.desc()).all()
     
-    # Get category configurations
-    categories = {cat: config for cat, config in current_app.quiz_manager.get_categories()}
+    # Récupérer l'historique complet des quiz
+    history = QuizResult.query.filter_by(user_id=user.id).order_by(QuizResult.completed_at.desc()).all()
     
-    # Group results by category
+    # Récupérer les configurations des catégories
+    categories = {}
+    for category, config in current_app.quiz_manager.get_categories():
+        categories[category] = config
+    
+    # Préparer les données pour le graphique
+    chart_data = {'dates': [], 'scores': []}
+    for result in sorted(history, key=lambda x: x.completed_at):
+        chart_data['dates'].append(result.completed_at.strftime('%d/%m/%Y'))
+        chart_data['scores'].append(result.percentage)
+    
+    # Calculer les statistiques par catégorie
     results_by_category = {}
-    
-    # Prepare chart data
-    chart_data = {
-        'dates': [],
-        'scores': [],
-        'quiz_counts': {}
-    }
-    
-    for result in quiz_results:
-        # Group by category
+    for result in history:
         if result.category not in results_by_category:
             results_by_category[result.category] = {
-                'config': categories.get(result.category, {'name': result.category}),
-                'results': []
+                'attempts': 0,
+                'total_score': 0,
+                'best_score': 0
             }
-        results_by_category[result.category]['results'].append(result)
         
-        # Prepare chart data
-        date_str = result.completed_at.strftime('%Y-%m-%d')
-        month_str = result.completed_at.strftime('%b %y')
-        
-        chart_data['dates'].append(date_str)
-        chart_data['scores'].append(result.percentage)
-        
-        if month_str in chart_data['quiz_counts']:
-            chart_data['quiz_counts'][month_str] += 1
-        else:
-            chart_data['quiz_counts'][month_str] = 1
-    
-    # Sort chart data
-    chart_data['dates'].reverse()
-    chart_data['scores'].reverse()
+        cat_stats = results_by_category[result.category]
+        cat_stats['attempts'] += 1
+        cat_stats['total_score'] += result.percentage
+        cat_stats['best_score'] = max(cat_stats['best_score'], result.percentage)
+        cat_stats['avg_score'] = cat_stats['total_score'] / cat_stats['attempts']
     
     return render_template('auth/profile.html',
                          user=user,
+                         history=history,
+                         categories=categories,
                          results_by_category=results_by_category,
                          chart_data=chart_data,
                          is_owner=user == current_user)

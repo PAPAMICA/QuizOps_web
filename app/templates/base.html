@@ -52,6 +52,18 @@
                             <i class="fas fa-list-check mr-2"></i>
                             {{ _('Quizzes') }}
                         </a>
+                        <a href="{{ url_for('quiz.custom_quiz') }}" 
+                           class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
+                            <i class="fas fa-magic mr-2"></i>
+                            {{ _('Custom Quiz') }}
+                        </a>
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
+                           class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            {{ _('My Stats') }}
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -140,6 +152,16 @@
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
                         <i class="fas fa-list-check mr-2"></i>{{ _('Quizzes') }}
                     </a>
+                    <a href="{{ url_for('quiz.custom_quiz') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
+                        <i class="fas fa-magic mr-2"></i>{{ _('Custom Quiz') }}
+                    </a>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
+                        <i class="fas fa-chart-line mr-2"></i>{{ _('My Stats') }}
+                    </a>
+                    {% endif %}
                 </div>
                 {% if current_user.is_authenticated %}
                 <div class="pt-4 pb-3 border-t border-gray-700">

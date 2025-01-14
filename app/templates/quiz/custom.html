@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-100">{{ _('Custom Quiz') }}</h1>
+            <p class="mt-2 text-gray-400">{{ _('Create your own quiz by selecting technologies and difficulty level') }}</p>
+        </div>
+
+        <form action="{{ url_for('quiz.create_custom_quiz') }}" method="POST" class="space-y-8">
+            <div class="bg-gray-800 shadow-lg rounded-lg border border-gray-700 p-6">
+                <!-- Technologies Selection -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-100 mb-4">
+                        {{ _('Select Technologies') }}
+                        <span class="text-sm font-normal text-gray-400 ml-2">({{ _('Select at least one') }})</span>
+                    </label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {% for category, config in categories.items()|sort(attribute='1.name') %}
+                        <label class="relative flex items-start p-4 rounded-lg border border-gray-700 bg-gray-800/50 hover:bg-gray-700/50 transition-colors duration-150 cursor-pointer group">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" 
+                                       name="technologies[]" 
+                                       value="{{ category }}"
+                                       class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800">
+                            </div>
+                            <div class="ml-3 flex items-center">
+                                {% if config.logo %}
+                                <img src="{{ config.logo }}" alt="{{ config.name }}" class="h-5 w-5 mr-2">
+                                {% endif %}
+                                <span class="text-sm font-medium text-gray-300 group-hover:text-gray-100">{{ config.name }}</span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Difficulty Level Selection -->
+                <div>
+                    <label class="block text-lg font-medium text-gray-100 mb-4">
+                        {{ _('Select Difficulty Level') }}
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <label class="relative flex items-center p-4 rounded-lg border border-green-700/50 bg-green-900/20 cursor-pointer hover:bg-green-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-green-500">
+                            <input type="radio" name="level" value="beginner" class="sr-only peer" required>
+                            <div class="flex items-center">
+                                <div class="h-4 w-4 rounded-full border-2 border-green-500 flex items-center justify-center peer-checked:bg-green-500">
+                                    <div class="h-2 w-2 rounded-full bg-green-500 opacity-0 peer-checked:opacity-100"></div>
+                                </div>
+                                <span class="ml-3 text-sm font-medium text-green-100">{{ _('Beginner') }}</span>
+                            </div>
+                        </label>
+                        <label class="relative flex items-center p-4 rounded-lg border border-blue-700/50 bg-blue-900/20 cursor-pointer hover:bg-blue-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-blue-500">
+                            <input type="radio" name="level" value="intermediate" class="sr-only peer" required>
+                            <div class="flex items-center">
+                                <div class="h-4 w-4 rounded-full border-2 border-blue-500 flex items-center justify-center peer-checked:bg-blue-500">
+                                    <div class="h-2 w-2 rounded-full bg-blue-500 opacity-0 peer-checked:opacity-100"></div>
+                                </div>
+                                <span class="ml-3 text-sm font-medium text-blue-100">{{ _('Intermediate') }}</span>
+                            </div>
+                        </label>
+                        <label class="relative flex items-center p-4 rounded-lg border border-purple-700/50 bg-purple-900/20 cursor-pointer hover:bg-purple-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-purple-500">
+                            <input type="radio" name="level" value="advanced" class="sr-only peer" required>
+                            <div class="flex items-center">
+                                <div class="h-4 w-4 rounded-full border-2 border-purple-500 flex items-center justify-center peer-checked:bg-purple-500">
+                                    <div class="h-2 w-2 rounded-full bg-purple-500 opacity-0 peer-checked:opacity-100"></div>
+                                </div>
+                                <span class="ml-3 text-sm font-medium text-purple-100">{{ _('Advanced') }}</span>
+                            </div>
+                        </label>
+                        <label class="relative flex items-center p-4 rounded-lg border border-red-700/50 bg-red-900/20 cursor-pointer hover:bg-red-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-red-500">
+                            <input type="radio" name="level" value="expert" class="sr-only peer" required>
+                            <div class="flex items-center">
+                                <div class="h-4 w-4 rounded-full border-2 border-red-500 flex items-center justify-center peer-checked:bg-red-500">
+                                    <div class="h-2 w-2 rounded-full bg-red-500 opacity-0 peer-checked:opacity-100"></div>
+                                </div>
+                                <span class="ml-3 text-sm font-medium text-red-100">{{ _('Expert') }}</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-center">
+                <button type="submit"
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
+                    <i class="fas fa-magic mr-2"></i>
+                    {{ _('Generate Custom Quiz') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des radios pour le niveau
+    const radioLabels = document.querySelectorAll('input[type="radio"][name="level"]');
+    radioLabels.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Retirer la classe active de tous les labels
+            radioLabels.forEach(r => {
+                r.closest('label').classList.remove('ring-2');
+            });
+            // Ajouter la classe active au label sélectionné
+            if (this.checked) {
+                this.closest('label').classList.add('ring-2');
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 
