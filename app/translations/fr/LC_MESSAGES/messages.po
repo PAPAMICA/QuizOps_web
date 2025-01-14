@@ -1,0 +1,204 @@
+# French translations for QuizOps.
+# Copyright (C) 2024 QuizOps
+# This file is distributed under the same license as the QuizOps project.
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+msgid "Welcome to QuizOps"
+msgstr "Bienvenue sur QuizOps"
+
+msgid "Test your IT knowledge with our interactive quizzes. Track your progress and improve your skills."
+msgstr "Testez vos connaissances en informatique avec nos quiz interactifs. Suivez votre progression et améliorez vos compétences."
+
+# Categories
+msgid "Networking"
+msgstr "Réseau"
+
+msgid "Linux"
+msgstr "Linux"
+
+msgid "Cloud"
+msgstr "Cloud"
+
+msgid "Security"
+msgstr "Sécurité"
+
+msgid "DevOps"
+msgstr "DevOps"
+
+msgid "Containers"
+msgstr "Conteneurs"
+
+# Levels
+msgid "Beginner"
+msgstr "Débutant"
+
+msgid "Advanced"
+msgstr "Avancé"
+
+msgid "Expert"
+msgstr "Expert"
+
+# Quiz interface
+msgid "Question"
+msgstr "Question"
+
+msgid "Submit Answer"
+msgstr "Soumettre la réponse"
+
+msgid "Next Question"
+msgstr "Question suivante"
+
+msgid "Explanation"
+msgstr "Explication"
+
+msgid "Source"
+msgstr "Source"
+
+msgid "Answer"
+msgstr "Réponse"
+
+msgid "Time Spent"
+msgstr "Temps passé"
+
+# Previous translations
+msgid "Get Started"
+msgstr "Commencer"
+
+msgid "Sign In"
+msgstr "Se connecter"
+
+msgid "Register"
+msgstr "S'inscrire"
+
+msgid "Login"
+msgstr "Connexion"
+
+msgid "Logout"
+msgstr "Déconnexion"
+
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Email address"
+msgstr "Adresse e-mail"
+
+msgid "Remember me"
+msgstr "Se souvenir de moi"
+
+msgid "Don't have an account?"
+msgstr "Vous n'avez pas de compte ?"
+
+msgid "Already have an account?"
+msgstr "Vous avez déjà un compte ?"
+
+msgid "Register here"
+msgstr "Inscrivez-vous ici"
+
+msgid "Sign in here"
+msgstr "Connectez-vous ici"
+
+msgid "Create your account"
+msgstr "Créez votre compte"
+
+msgid "Sign in to your account"
+msgstr "Connectez-vous à votre compte"
+
+msgid "Available Quizzes"
+msgstr "Quiz disponibles"
+
+msgid "Start Quiz"
+msgstr "Commencer le quiz"
+
+msgid "Submit Quiz"
+msgstr "Soumettre le quiz"
+
+msgid "My Quiz Results"
+msgstr "Mes résultats"
+
+msgid "Quiz"
+msgstr "Quiz"
+
+msgid "Score"
+msgstr "Score"
+
+msgid "Percentage"
+msgstr "Pourcentage"
+
+msgid "Completed"
+msgstr "Terminé"
+
+msgid "Total Quizzes Taken"
+msgstr "Total des quiz passés"
+
+msgid "Average Score"
+msgstr "Score moyen"
+
+msgid "Take a Quiz"
+msgstr "Passer un quiz"
+
+msgid "Features"
+msgstr "Fonctionnalités"
+
+msgid "Various Topics"
+msgstr "Sujets variés"
+
+msgid "From networking to programming, we cover all IT domains."
+msgstr "Du réseau à la programmation, nous couvrons tous les domaines de l'informatique."
+
+msgid "Track Progress"
+msgstr "Suivi de progression"
+
+msgid "Monitor your performance and see your improvement over time."
+msgstr "Suivez vos performances et observez votre progression au fil du temps."
+
+msgid "Multi-language"
+msgstr "Multi-langues"
+
+msgid "Available in multiple languages for global accessibility."
+msgstr "Disponible en plusieurs langues pour une accessibilité mondiale."
+
+msgid "Quiz not found"
+msgstr "Quiz introuvable"
+
+msgid "Quiz completed! Your score: %(score)s/%(max)s"
+msgstr "Quiz terminé ! Votre score : %(score)s/%(max)s"
+
+msgid "You haven't completed any quizzes yet."
+msgstr "Vous n'avez pas encore terminé de quiz."
+
+msgid "No quizzes available at the moment."
+msgstr "Aucun quiz disponible pour le moment."
+
+msgid "All rights reserved."
+msgstr "Tous droits réservés."
+
+msgid "Please log in to access this page."
+msgstr "Veuillez vous connecter pour accéder à cette page."
+
+msgid "Username already taken."
+msgstr "Ce nom d'utilisateur est déjà pris."
+
+msgid "Email already registered."
+msgstr "Cette adresse e-mail est déjà enregistrée."
+
+msgid "Congratulations, you are now registered!"
+msgstr "Félicitations, vous êtes maintenant inscrit !"
+
+msgid "Invalid username or password"
+msgstr "Nom d'utilisateur ou mot de passe invalide" 

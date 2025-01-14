@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Quiz Results') }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <!-- En-tête -->
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    {{ quiz.title }}
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 capitalize">
+                        {{ quiz.category }}
+                    </span>
+                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800 capitalize">
+                        {{ quiz.level }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score -->
+        <div class="px-4 py-8 sm:px-6">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-24 h-24 rounded-full {% if score_percentage >= 80 %}bg-green-100{% elif score_percentage >= 50 %}bg-yellow-100{% else %}bg-red-100{% endif %} mb-4">
+                    <span class="text-3xl font-bold {% if score_percentage >= 80 %}text-green-700{% elif score_percentage >= 50 %}text-yellow-700{% else %}text-red-700{% endif %}">
+                        {{ score_percentage }}%
+                    </span>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">
+                    {% if score_percentage >= 80 %}
+                        {{ _('Excellent!') }}
+                    {% elif score_percentage >= 50 %}
+                        {{ _('Good job!') }}
+                    {% else %}
+                        {{ _('Keep practicing!') }}
+                    {% endif %}
+                </h2>
+                <p class="text-gray-500">
+                    {{ _('You got %(correct)s out of %(total)s questions correct', correct=correct_answers, total=total_questions) }}
+                </p>
+            </div>
+
+            <!-- Détails des réponses -->
+            <div class="mt-8">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ _('Detailed Results') }}</h3>
+                <div class="space-y-4">
+                    {% for qa in questions %}
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 mt-1">
+                                {% if qa.is_correct %}
+                                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-red-500 text-xl"></i>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 w-full">
+                                <p class="text-sm font-medium text-gray-900">
+                                    {{ qa.question.question }}
+                                </p>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-600">
+                                        <span class="font-medium">{{ _('Your answer:') }}</span>
+                                        {{ qa.question.options[qa.user_answer] }}
+                                    </p>
+                                    {% if not qa.is_correct %}
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        <span class="font-medium">{{ _('Correct answer:') }}</span>
+                                        {{ qa.question.options[qa.question.correct_answer] }}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    <!-- Explication -->
+                                    <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                                        <h4 class="text-sm font-medium text-blue-900 mb-2">{{ _('Explanation:') }}</h4>
+                                        <p class="text-sm text-blue-700">
+                                            {{ qa.question.explanation }}
+                                        </p>
+                                        {% if qa.question.source %}
+                                        <div class="mt-2 text-xs text-blue-600">
+                                            <span class="font-medium">{{ _('Source:') }}</span>
+                                            {% set source_parts = qa.question.source.split(' - ') %}
+                                            {% if source_parts|length > 1 %}
+                                                {{ source_parts[0] }} - 
+                                                <a href="{{ source_parts[1] }}" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-800">
+                                                    {{ source_parts[1] }}
+                                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                                </a>
+                                            {% else %}
+                                                <span>{{ qa.question.source }}</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="px-4 py-4 sm:px-6 bg-gray-50 border-t border-gray-200">
+            <div class="flex justify-between">
+                <a href="{{ url_for('quiz.list_quizzes') }}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-list mr-2"></i>
+                    {{ _('Back to Quizzes') }}
+                </a>
+                <form action="{{ url_for('quiz.start_quiz', quiz_id=quiz.id) }}" method="post">
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                        <i class="fas fa-redo mr-2"></i>
+                        {{ _('Try Again') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

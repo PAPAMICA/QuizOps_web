@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="{{ g.locale }}" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - QuizOps</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+    <nav class="bg-indigo-600 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{{ url_for('main.index') }}" class="text-white text-xl font-bold">QuizOps</a>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="{{ url_for('main.index') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">{{ _('Home') }}</a>
+                        <a href="{{ url_for('quiz.list_quizzes') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">{{ _('Quizzes') }}</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    {% if current_user.is_authenticated %}
+                    <div class="flex items-center space-x-4">
+                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                            <button @click="open = !open" 
+                                    class="flex items-center text-white hover:text-gray-200 focus:outline-none">
+                                <span class="mr-2">{{ current_user.username }}</span>
+                                <i class="fas fa-chevron-down text-xs" :class="{ 'transform rotate-180': open }"></i>
+                            </button>
+                            <div x-show="open"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <a href="{{ url_for('auth.profile', username=current_user.username) }}" 
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user mr-2"></i>{{ _('Profile') }}
+                                </a>
+                                <a href="{{ url_for('auth.settings') }}" 
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-cog mr-2"></i>{{ _('Settings') }}
+                                </a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="{{ url_for('auth.logout') }}" 
+                                   class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>{{ _('Logout') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="space-x-4">
+                        <a href="{{ url_for('auth.login') }}" class="bg-white text-indigo-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50">{{ _('Login') }}</a>
+                        <a href="{{ url_for('auth.register') }}" class="bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-800">{{ _('Register') }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="mb-4 p-4 rounded-md {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>&copy; 2024 QuizOps. {{ _('All rights reserved.') }}</p>
+        </div>
+    </footer>
+
+    <!-- Alpine.js -->
+    <script src="//unpkg.com/alpinejs" defer></script>
+</body>
+</html> 

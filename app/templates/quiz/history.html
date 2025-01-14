@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Quiz History') }} - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            {{ _('Quiz History') }} - {{ quiz.title }}
+        </h1>
+        <form action="{{ url_for('quiz.start_quiz', quiz_id=quiz.id) }}" method="post">
+            <button type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                <i class="fas fa-play mr-2"></i>
+                {{ _('Start New Attempt') }}
+            </button>
+        </form>
+    </div>
+
+    {% if history %}
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">{{ _('Your Attempts') }}</h2>
+            <p class="mt-1 text-sm text-gray-500">{{ _('Best score:') }} 
+                <span class="font-medium {% if best_score >= 80 %}text-green-600{% elif best_score >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                    {{ "%.1f"|format(best_score) }}%
+                </span>
+            </p>
+        </div>
+
+        <div class="bg-gray-50 px-4 py-5 sm:p-6">
+            <div class="space-y-4">
+                {% for attempt in history %}
+                <div class="bg-white shadow rounded-lg overflow-hidden">
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm font-medium text-gray-900">
+                                    {{ attempt.completed_at.strftime('%d/%m/%Y %H:%M') }}
+                                </span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if attempt.percentage >= 80 %}bg-green-100 text-green-800{% elif attempt.percentage >= 50 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ "%.1f"|format(attempt.percentage) }}%
+                                </span>
+                            </div>
+                            <button onclick="toggleDetails('attempt-{{ attempt.id }}', 'icon-{{ attempt.id }}')"
+                                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                <i id="icon-{{ attempt.id }}" class="fas fa-chevron-down mr-1 transform transition-transform duration-200"></i>
+                                {{ _('Details') }}
+                            </button>
+                        </div>
+                        <div id="attempt-{{ attempt.id }}" class="hidden mt-4 border-t border-gray-200 pt-4">
+                            {% for question in quiz.questions %}
+                            {% set answer = attempt.answers[question.id] if question.id in attempt.answers else None %}
+                            <div class="mb-4 last:mb-0">
+                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                    {{ question.question }}
+                                </p>
+                                {% if answer %}
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">
+                                        <span class="font-medium">{{ _('Your answer:') }}</span>
+                                        <span class="{% if answer.is_correct %}text-green-600{% else %}text-red-600{% endif %}">
+                                            {{ question.options[answer.user_answer] }}
+                                        </span>
+                                    </p>
+                                    {% if not answer.is_correct %}
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        <span class="font-medium">{{ _('Correct answer:') }}</span>
+                                        <span class="text-green-600">
+                                            {{ question.options[answer.correct_answer] }}
+                                        </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900">{{ _('No attempts yet') }}</h3>
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                <p>{{ _('Start your first attempt to see your results here.') }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleDetails(contentId, iconId) {
+    const content = document.getElementById(contentId);
+    const icon = document.getElementById(iconId);
+    if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+</script>
+{% endblock %} 

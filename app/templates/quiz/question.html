@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Question') }} {{ question_number }}/{{ total_questions }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <!-- En-tête -->
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    {{ quiz.title }}
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 capitalize">
+                        {{ quiz.category }}
+                    </span>
+                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800 capitalize">
+                        {{ quiz.level }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progression -->
+        <div class="px-4 py-4 sm:px-6 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-gray-700">
+                    {{ _('Question') }} {{ question_number }}/{{ total_questions }}
+                </span>
+                <div class="w-2/3 bg-gray-200 rounded-full h-2.5">
+                    {% set progress = (question_number / total_questions * 100) | round %}
+                    <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {{ progress }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question -->
+        <div class="px-4 py-6 sm:px-6">
+            <div class="space-y-6">
+                <!-- Question text -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">
+                        {{ question.question }}
+                    </h2>
+
+                    <!-- Options -->
+                    <form action="{{ url_for('quiz.answer_question', quiz_id=quiz.id, question_number=question_number) }}" method="post" class="space-y-3">
+                        {% for option in question.options %}
+                        <label class="flex items-center p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150">
+                            <input type="radio" name="answer" value="{{ loop.index0 }}" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300" required>
+                            <span class="ml-3 text-gray-900">{{ option }}</span>
+                        </label>
+                        {% endfor %}
+
+                        <div class="mt-6 flex justify-between items-center">
+                            {% if question_number > 1 %}
+                            <a href="{{ url_for('quiz.show_question', quiz_id=quiz.id, question_number=question_number-1) }}"
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                {{ _('Previous') }}
+                            </a>
+                            {% else %}
+                            <div></div>
+                            {% endif %}
+
+                            <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                {{ _('Submit Answer') }}
+                                <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
