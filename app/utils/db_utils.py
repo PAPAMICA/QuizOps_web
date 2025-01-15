@@ -16,7 +16,8 @@ def session_manager():
         raise
     finally:
         session.close()
-        if not session.bind.pool.checkedin() > session.bind.pool.size * 0.9:
+        # Vérifier le nombre de connexions actives
+        if session.bind.pool._checked_out >= session.bind.pool.size * 0.9:
             # Si plus de 90% des connexions sont utilisées, forcer le nettoyage
             db.engine.dispose()
 
