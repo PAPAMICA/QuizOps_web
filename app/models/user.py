@@ -27,11 +27,20 @@ class User(UserMixin, db.Model):
         """Génère un nouveau code de vérification de 6 chiffres"""
         self.verification_code = ''.join(secrets.choice('0123456789') for _ in range(6))
         self.verification_code_expires = datetime.utcnow() + timedelta(hours=24)
-        print(f"\n==== GENERATING VERIFICATION CODE ====")
-        print(f"User: {self.username}")
-        print(f"Code: {self.verification_code}")
-        print(f"Expires: {self.verification_code_expires}")
-        print("=====================================\n")
+
+        try:
+            db.session.commit()
+            print(f"\n==== GENERATING VERIFICATION CODE ====")
+            print(f"User: {self.username}")
+            print(f"Code: {self.verification_code}")
+            print(f"Expires: {self.verification_code_expires}")
+            print("Code saved to database successfully!")
+            print("=====================================\n")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error saving verification code to database: {e}")
+            return None
+
         return self.verification_code
 
     def verify_email(self, code):
@@ -42,28 +51,37 @@ class User(UserMixin, db.Model):
         print(f"Received code: {code}")
         print(f"Code expires: {self.verification_code_expires}")
         print(f"Current time: {datetime.utcnow()}")
-        
+
         if not self.verification_code:
             print("No verification code stored")
             return False
-            
+
         if not code:
             print("No code provided")
             return False
-            
+
         if self.verification_code != code:
             print("Codes don't match")
             return False
-            
+
         if datetime.utcnow() > self.verification_code_expires:
             print("Code has expired")
             return False
-            
+
         print("Code is valid! Verifying email...")
         self.email_verified = True
         self.verification_code = None
         self.verification_code_expires = None
-        print("Email verified successfully!")
+
+        # Ajouter le commit des modifications
+        try:
+            db.session.commit()
+            print("Email verified successfully and saved to database!")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error saving to database: {e}")
+            return False
+
         print("============================\n")
         return True
 
@@ -105,4 +123,4 @@ class QuizResult(db.Model):
         try:
             return round((self.score / self.max_score) * 100, 1)
         except (ZeroDivisionError, TypeError):
-            return 0.0 
+            return 0.0
