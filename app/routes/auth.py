@@ -284,12 +284,18 @@ def settings():
 
         if action == 'update_email':
             email = request.form.get('email')
-            if User.query.filter_by(email=email).first() and email != current_user.email:
-                flash('Email already registered.', 'error')
-            else:
+            if email != current_user.email:  # Only check if email is actually changing
+                if User.query.filter_by(email=email).first():
+                    flash('Email already registered.', 'error')
+                    return redirect(url_for('auth.settings'))
                 current_user.email = email
-                db.session.commit()
-                flash('Email updated successfully.', 'success')
+                try:
+                    db.session.commit()
+                    flash('Email updated successfully.', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash('An error occurred while updating email.', 'error')
+                    print(f"Error updating email: {str(e)}")
 
         elif action == 'update_password':
             current_password = request.form.get('current_password')
@@ -299,8 +305,42 @@ def settings():
                 flash('Current password is incorrect.', 'error')
             else:
                 current_user.set_password(new_password)
-                db.session.commit()
-                flash('Password updated successfully.', 'success')
+                try:
+                    db.session.commit()
+                    flash('Password updated successfully.', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash('An error occurred while updating password.', 'error')
+                    print(f"Error updating password: {str(e)}")
+
+        elif action == 'update_username':
+            new_username = request.form.get('new_username', '').strip()
+            
+            # Validate username
+            if not new_username:
+                flash('Username cannot be empty.', 'error')
+                return redirect(url_for('auth.settings'))
+                
+            if len(new_username) < 3 or len(new_username) > 64:
+                flash('Username must be between 3 and 64 characters.', 'error')
+                return redirect(url_for('auth.settings'))
+                
+            # Check if username is already taken
+            if new_username != current_user.username:  # Only check if username is actually changing
+                existing_user = User.query.filter_by(username=new_username).first()
+                if existing_user:
+                    flash('Username is already taken.', 'error')
+                    return redirect(url_for('auth.settings'))
+                
+                # Update username
+                current_user.username = new_username
+                try:
+                    db.session.commit()
+                    flash('Username updated successfully.', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash('An error occurred while updating username.', 'error')
+                    print(f"Error updating username: {str(e)}")
 
         return redirect(url_for('auth.settings'))
 

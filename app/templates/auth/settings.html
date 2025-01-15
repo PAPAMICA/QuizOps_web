@@ -150,7 +150,8 @@
             <!-- Username Settings -->
             <div class="mb-8 p-6 bg-gray-900 rounded-lg shadow-md border border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-100 mb-4">Username Settings</h3>
-                <form method="POST" action="{{ url_for('auth.update_username') }}" class="space-y-4">
+                <form method="POST" class="space-y-4">
+                    <input type="hidden" name="action" value="update_username">
                     <div>
                         <label for="current_username" class="block text-sm font-medium text-gray-300">Current Username</label>
                         <input type="text" id="current_username" value="{{ current_user.username }}" disabled
