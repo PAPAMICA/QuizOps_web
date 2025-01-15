@@ -10,6 +10,7 @@ import os
 import yaml
 from werkzeug.utils import secure_filename
 import time
+from sqlalchemy.sql import text
 
 bp = Blueprint('auth', __name__)
 
@@ -627,15 +628,13 @@ def update_profile_picture():
             return redirect(url_for('auth.settings'))
             
         # Get current profile picture
-        current_user_data = db.session.execute(
-            db.select(User.profile_picture)
-            .where(User.id == current_user.id)
-        ).scalar()
+        sql = "SELECT profile_picture FROM users WHERE id = :user_id"
+        current_picture = db.session.execute(text(sql), {'user_id': current_user.id}).scalar()
             
         # Delete old profile picture if it exists
-        if current_user_data and current_user_data != 'default.png':
+        if current_picture and current_picture != 'default.png':
             try:
-                old_picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], current_user_data)
+                old_picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], current_picture)
                 if os.path.exists(old_picture_path):
                     os.remove(old_picture_path)
             except Exception as e:
@@ -648,14 +647,11 @@ def update_profile_picture():
         file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
         
         # Update profile picture directly in database
-        db.session.execute(
-            db.update(User)
-            .where(User.id == current_user.id)
-            .values(profile_picture=filename)
-        )
+        sql = "UPDATE users SET profile_picture = :filename WHERE id = :user_id"
+        db.session.execute(text(sql), {'filename': filename, 'user_id': current_user.id})
         db.session.commit()
         
-        # Get fresh user data and refresh session
+        # Recharger l'utilisateur après la mise à jour
         user = User.query.get(current_user.id)
         if user:
             login_user(user)
