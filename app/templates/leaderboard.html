@@ -1,99 +1,129 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Leaderboard</h1>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-100 mb-8">Leaderboard</h1>
 
-    <div class="row">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Most Active Users -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Most Active Users</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>User</th>
-                                    <th>Quizzes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in most_active %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td><a href="{{ url_for('auth.profile', username=user.username) }}">{{ user.username }}</a></td>
-                                    <td>{{ user.quiz_count }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
+            <div class="bg-gray-900/50 px-6 py-4 border-b border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-100 flex items-center">
+                    <i class="fas fa-fire mr-3 text-orange-400"></i>
+                    Most Active Users
+                </h2>
+            </div>
+            <div class="p-4">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="text-gray-400 text-sm">
+                                <th class="px-4 py-2 text-left">#</th>
+                                <th class="px-4 py-2 text-left">User</th>
+                                <th class="px-4 py-2 text-right">Quizzes</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for user in most_active %}
+                            <tr class="hover:bg-gray-700/50 transition-colors duration-150">
+                                <td class="px-4 py-3 text-gray-300">{{ loop.index }}</td>
+                                <td class="px-4 py-3">
+                                    <a href="{{ url_for('auth.profile', username=user.username) }}" 
+                                       class="text-indigo-400 hover:text-indigo-300 transition-colors duration-150">
+                                        {{ user.username }}
+                                    </a>
+                                </td>
+                                <td class="px-4 py-3 text-right text-gray-300">{{ user.quiz_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
         <!-- Best Average Score -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Best Average Score</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>User</th>
-                                    <th>Average</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in best_average %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td><a href="{{ url_for('auth.profile', username=user.username) }}">{{ user.username }}</a></td>
-                                    <td>{{ "%.1f"|format(user.average_score) }}%</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
+            <div class="bg-gray-900/50 px-6 py-4 border-b border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-100 flex items-center">
+                    <i class="fas fa-chart-line mr-3 text-green-400"></i>
+                    Best Average Score
+                </h2>
+            </div>
+            <div class="p-4">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="text-gray-400 text-sm">
+                                <th class="px-4 py-2 text-left">#</th>
+                                <th class="px-4 py-2 text-left">User</th>
+                                <th class="px-4 py-2 text-right">Average</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for user in best_average %}
+                            <tr class="hover:bg-gray-700/50 transition-colors duration-150">
+                                <td class="px-4 py-3 text-gray-300">{{ loop.index }}</td>
+                                <td class="px-4 py-3">
+                                    <a href="{{ url_for('auth.profile', username=user.username) }}" 
+                                       class="text-indigo-400 hover:text-indigo-300 transition-colors duration-150">
+                                        {{ user.username }}
+                                    </a>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <span class="px-2 py-1 rounded-full text-sm font-medium
+                                        {% if user.average_score >= 90 %}bg-green-900/50 text-green-400
+                                        {% elif user.average_score >= 75 %}bg-blue-900/50 text-blue-400
+                                        {% elif user.average_score >= 50 %}bg-yellow-900/50 text-yellow-400
+                                        {% else %}bg-red-900/50 text-red-400{% endif %}">
+                                        {{ "%.1f"|format(user.average_score) }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
         <!-- Most Perfect Scores -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Most Perfect Scores</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>User</th>
-                                    <th>Perfect Scores</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in most_perfect %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td><a href="{{ url_for('auth.profile', username=user.username) }}">{{ user.username }}</a></td>
-                                    <td>{{ user.perfect_count }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
+            <div class="bg-gray-900/50 px-6 py-4 border-b border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-100 flex items-center">
+                    <i class="fas fa-star mr-3 text-yellow-400"></i>
+                    Most Perfect Scores
+                </h2>
+            </div>
+            <div class="p-4">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="text-gray-400 text-sm">
+                                <th class="px-4 py-2 text-left">#</th>
+                                <th class="px-4 py-2 text-left">User</th>
+                                <th class="px-4 py-2 text-right">Perfect</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for user in most_perfect %}
+                            <tr class="hover:bg-gray-700/50 transition-colors duration-150">
+                                <td class="px-4 py-3 text-gray-300">{{ loop.index }}</td>
+                                <td class="px-4 py-3">
+                                    <a href="{{ url_for('auth.profile', username=user.username) }}" 
+                                       class="text-indigo-400 hover:text-indigo-300 transition-colors duration-150">
+                                        {{ user.username }}
+                                    </a>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded-full text-sm font-medium">
+                                        {{ user.perfect_count }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

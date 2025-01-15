@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models.user import User, QuizResult
+from app.models.user import User, QuizResult, Category
 from app import db, mail
 from urllib.parse import urlparse
 from werkzeug.security import check_password_hash
@@ -261,35 +261,75 @@ def settings():
 
     return render_template('auth/settings.html')
 
-@bp.route('/profile/<username>')
-@login_required
-def profile(username):
-    user = User.query.filter_by(username=username).first_or_404()
+@bp.route('/profile/<int:user_id>')
+def profile(user_id):
+    user = User.query.get_or_404(user_id)
     
-    # If profile is private and not the owner, show private message
-    if user.private_profile and current_user.id != user.id:
-        flash('This profile is private.', 'info')
+    # If profile is private and current user is not the owner, show private message
+    if user.private_profile and (not current_user.is_authenticated or current_user.id != user.id):
         return render_template('auth/profile.html', user=user)
 
-    # Get quiz results
-    quiz_results = QuizResult.query.filter_by(user_id=user.id).order_by(QuizResult.completed_at.desc()).all()
-    
+    # Get quiz results for the user
+    quiz_results = (QuizResult.query
+                   .filter_by(user_id=user.id)
+                   .order_by(QuizResult.completed_at.desc())
+                   .all())
+
     # Calculate statistics
-    quiz_count = len(quiz_results)
-    perfect_scores = len([r for r in quiz_results if r.score == r.max_score])
+    total_quizzes = len(quiz_results)
+    perfect_scores = sum(1 for result in quiz_results if result.percentage == 100)
+    avg_score = sum(result.percentage for result in quiz_results) / total_quizzes if total_quizzes > 0 else 0
+
+    # Prepare chart data
+    chart_data = {
+        'dates': [],
+        'scores': [],
+        'categories': [],
+        'activity': {}
+    }
+
+    # Get all categories
+    categories = {cat.name: cat for cat in Category.query.all()}
+
+    # Calculate category statistics
+    category_stats = {}
     
-    # Calculate average score
-    if quiz_results:
-        avg_score = sum(r.percentage for r in quiz_results) / len(quiz_results)
-    else:
-        avg_score = 0.0
+    for result in quiz_results:
+        # Chart data
+        chart_data['dates'].append(result.completed_at.strftime('%Y-%m-%d'))
+        chart_data['scores'].append(result.percentage)
+        chart_data['categories'].append(result.category)
+        
+        # Activity data (count quizzes per month)
+        month_key = result.completed_at.strftime('%B %Y')
+        chart_data['activity'][month_key] = chart_data['activity'].get(month_key, 0) + 1
+        
+        # Category statistics
+        if result.category not in category_stats:
+            category_stats[result.category] = {
+                'count': 0,
+                'total_score': 0,
+                'best_score': 0
+            }
+        
+        stats = category_stats[result.category]
+        stats['count'] += 1
+        stats['total_score'] += result.percentage
+        stats['best_score'] = max(stats['best_score'], result.percentage)
+
+    # Calculate average scores for categories
+    for category, stats in category_stats.items():
+        stats['avg_score'] = round(stats['total_score'] / stats['count'], 1)
 
     return render_template('auth/profile.html',
                          user=user,
-                         quiz_results=quiz_results,
-                         quiz_count=quiz_count,
-                         avg_score=avg_score,
-                         perfect_scores=perfect_scores)
+                         history=quiz_results,
+                         total_quizzes=total_quizzes,
+                         perfect_scores=perfect_scores,
+                         avg_score=round(avg_score, 1),
+                         chart_data=chart_data,
+                         category_stats=category_stats,
+                         categories=categories)
 
 @bp.route('/profile/privacy/update', methods=['POST'])
 @login_required
