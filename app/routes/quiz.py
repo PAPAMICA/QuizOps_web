@@ -202,19 +202,21 @@ def answer_question(quiz_id, question_number):
 @retry_on_db_lock()
 def show_results(quiz_id):
     """Affiche les résultats du quiz"""
-    if session.get('current_quiz') != quiz_id:
+    from flask import session as flask_session
+
+    if flask_session.get('current_quiz') != quiz_id:
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
 
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz:
         return render_template('404.html'), 404
 
-    answers = session.get('answers', {})
+    answers = flask_session.get('answers', {})
     if not answers:
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
 
     # Récupérer les questions dans l'ordre où elles ont été présentées
-    questions = session.get('questions', [])
+    questions = flask_session.get('questions', [])
 
     # Calculer le score
     correct_answers = 0
@@ -272,7 +274,7 @@ def show_results(quiz_id):
     score_percentage = round((correct_answers / total_questions) * 100)
 
     try:
-        with session_manager() as session:
+        with session_manager() as db_session:
             quiz_result = QuizResult(
                 user_id=current_user.id,
                 quiz_id=quiz_id,
@@ -284,21 +286,18 @@ def show_results(quiz_id):
                 time_spent=0,
                 quiz_title=quiz.get('title', quiz_id) if not quiz_id.startswith('custom_') else f"Custom Quiz - {quiz.get('category', '')} ({quiz.get('level', '')})"
             )
-            session.add(quiz_result)
-            session.commit()
+            db_session.add(quiz_result)
     except Exception as e:
         current_app.logger.error(f"Error saving quiz result: {e}")
         raise
-    finally:
-        db.session.remove()  # Force la libération de la session
 
-    # Nettoyer la session
-    session.pop('current_quiz', None)
-    session.pop('current_question', None)
-    session.pop('shuffled_options', None)
-    session.pop('answers', None)
-    session.pop('questions', None)
-    session.pop('questions_order', None)
+    # Nettoyer la session Flask
+    flask_session.pop('current_quiz', None)
+    flask_session.pop('current_question', None)
+    flask_session.pop('shuffled_options', None)
+    flask_session.pop('answers', None)
+    flask_session.pop('questions', None)
+    flask_session.pop('questions_order', None)
 
     return render_template('quiz/results.html',
                          quiz=quiz,
