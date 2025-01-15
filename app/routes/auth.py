@@ -531,7 +531,7 @@ def update_username():
     try:
         new_username = request.form.get('new_username', '').strip()
         
-        # Validation
+        # Validate username
         if not new_username:
             flash('Username cannot be empty.', 'error')
             return redirect(url_for('auth.settings'))
@@ -543,7 +543,7 @@ def update_username():
         # Check if username is already taken
         existing_user = User.query.filter_by(username=new_username).first()
         if existing_user and existing_user.id != current_user.id:
-            flash('This username is already taken.', 'error')
+            flash('Username is already taken.', 'error')
             return redirect(url_for('auth.settings'))
             
         # Update username

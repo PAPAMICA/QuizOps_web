@@ -148,7 +148,7 @@ def leaderboard():
     base_query = db.session.query(
         User,
         func.count(QuizResult.id).label('total_quizzes'),
-        func.round(cast(func.sum(QuizResult.score * 100.0), Float) / cast(func.sum(QuizResult.max_score), Float), 1).label('avg_score'),
+        (func.sum(QuizResult.score * 100.0) / func.sum(QuizResult.max_score)).label('avg_score'),
         func.sum(case((QuizResult.score == QuizResult.max_score, 1), else_=0)).label('perfect_scores')
     ).join(QuizResult).filter(~QuizResult.category.like('custom%'))  # Exclude custom quizzes
 
