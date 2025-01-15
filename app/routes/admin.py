@@ -58,7 +58,7 @@ def users():
     users = User.query.all()
     return render_template('admin/users.html', users=users)
 
-@bp.route('/user/<int:user_id>/toggle-admin', methods=['POST'])
+@bp.route('/user/<user_id>/toggle-admin', methods=['POST'])
 @login_required
 @admin_required
 def toggle_admin(user_id):
@@ -71,7 +71,7 @@ def toggle_admin(user_id):
         flash(f'Admin status for {user.username} has been {"granted" if user.is_admin else "revoked"}.', 'success')
     return redirect(url_for('admin.users'))
 
-@bp.route('/user/<int:user_id>/delete', methods=['POST'])
+@bp.route('/user/<user_id>/delete', methods=['POST'])
 @login_required
 @admin_required
 def delete_user(user_id):

@@ -31,7 +31,7 @@ def create_app(config_class=Config):
     from app.models.user import User
     @login.user_loader
     def load_user(id):
-        return User.query.get(int(id))
+        return User.query.get(id)
 
     # Initialisation des routes
     from app.routes import init_app as init_routes

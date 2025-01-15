@@ -524,3 +524,36 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
     
     return render_template('auth/reset_password.html', form=form)
+
+@bp.route('/profile/username/update', methods=['POST'])
+@login_required
+def update_username():
+    try:
+        new_username = request.form.get('new_username', '').strip()
+        
+        # Validation
+        if not new_username:
+            flash('Username cannot be empty.', 'error')
+            return redirect(url_for('auth.settings'))
+            
+        if len(new_username) < 3 or len(new_username) > 64:
+            flash('Username must be between 3 and 64 characters.', 'error')
+            return redirect(url_for('auth.settings'))
+            
+        # Check if username is already taken
+        existing_user = User.query.filter_by(username=new_username).first()
+        if existing_user and existing_user.id != current_user.id:
+            flash('This username is already taken.', 'error')
+            return redirect(url_for('auth.settings'))
+            
+        # Update username
+        current_user.username = new_username
+        db.session.commit()
+        flash('Username updated successfully.', 'success')
+        
+    except Exception as e:
+        print(f"Error updating username: {str(e)}")
+        db.session.rollback()
+        flash('An error occurred while updating username.', 'error')
+    
+    return redirect(url_for('auth.settings'))
