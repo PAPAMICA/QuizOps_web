@@ -100,20 +100,25 @@ class Quiz(db.Model):
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
 def create_admin_user():
+    existing_admin = User.query.filter_by(is_admin=True).first()
+    if existing_admin:
+        print('An admin user already exists. No action taken.')
+        return
+
     admin = User(
-        username='admin',
-        email='admin@quizops.local',
+        username='PAPAMICA',
+        email='mickael@papamica.com',
         email_verified=True,
         is_admin=True,
         private_profile=False
     )
-    admin.set_password('admin')  # À changer en production !
+    admin.set_password('admin')
     db.session.add(admin)
     db.session.commit()
-    print('\nUtilisateur admin créé:')
-    print('Username: admin')
+    print('\nAdmin user created:')
+    print('Username: PAPAMICA')
     print('Password: admin')
-    print('Email: admin@quizops.local')
+    print('Email: mickael@papamica.com')
 
 def init_db():
     # Create the database if it does not exist

@@ -8,6 +8,7 @@ from app.forms import LoginForm, RegistrationForm, RequestPasswordResetForm, Res
 from flask_mail import Message
 import os
 import yaml
+import re
 
 bp = Blueprint('auth', __name__)
 
@@ -25,11 +26,11 @@ def send_verification_email(user):
         print(f"Use TLS: {current_app.config.get('MAIL_USE_TLS')}")
         print(f"Default Sender: {current_app.config.get('MAIL_DEFAULT_SENDER')}")
         print("==========================\n")
-        
+
         msg = Message('QuizOps - Verify Your Email',
                      sender=current_app.config['MAIL_DEFAULT_SENDER'],
                      recipients=[user.email])
-        
+
         msg.body = f'''Hi {user.username},
 
 Thank you for registering with QuizOps! To verify your email address, please use the following code:
@@ -69,9 +70,9 @@ def send_password_reset_email(user):
     msg = Message('QuizOps - Password Reset Request',
                  sender=current_app.config['MAIL_DEFAULT_SENDER'],
                  recipients=[user.email])
-    
+
     reset_url = url_for('auth.reset_password', token=token, _external=True)
-    
+
     msg.body = f'''Hi {user.username},
 
 To reset your password, visit the following link:
@@ -89,7 +90,7 @@ The QuizOps Team'''
 <p>To reset your password, click the button below:</p>
 
 <p style="text-align: center;">
-    <a href="{reset_url}" 
+    <a href="{reset_url}"
        style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 4px;">
         Reset Password
     </a>
@@ -111,25 +112,30 @@ The QuizOps Team</p>'''
 def register():
     print("\n==== REGISTER ROUTE ====")
     print(f"Method: {request.method}")
-    
+
     if current_user.is_authenticated:
         print("User already authenticated, redirecting to index")
         return redirect(url_for('main.index'))
 
     form = RegistrationForm()
     print(f"Form data: {request.form}")
-    
+
     if request.method == 'POST':
         print("\nForm validation:")
         print(f"CSRF Token valid: {form.csrf_token.validate(form)}")
         for field in form:
             print(f"{field.name}: {field.validate(form)}")
-        
+
         if form.validate_on_submit():
             print("Form validated successfully")
             username = form.username.data
             email = form.email.data
             password = form.password.data
+
+            # Validate username format (letters and numbers only)
+            if not re.match('^[a-zA-Z0-9]+$', username):
+                flash('Username can only contain letters and numbers.', 'error')
+                return redirect(url_for('auth.register'))
 
             print(f"\n==== NEW REGISTRATION ====")
             print(f"Username: {username}")
@@ -148,7 +154,7 @@ def register():
 
             user = User(username=username, email=email)
             user.set_password(password)
-            
+
             try:
                 print("Adding user to database...")
                 db.session.add(user)
@@ -189,22 +195,22 @@ def verify_email():
     if request.method == 'POST':
         code = request.form.get('code')
         print(f"Received code: {code}")
-        
+
         # Rechercher tous les utilisateurs non vérifiés
         unverified_users = User.query.filter_by(email_verified=False).all()
         print(f"\nUnverified users found: {len(unverified_users)}")
         for u in unverified_users:
             print(f"- {u.username} (code: {u.verification_code})")
-        
+
         # Rechercher l'utilisateur avec ce code
         user = User.query.filter_by(verification_code=code, email_verified=False).first()
-        
+
         if user:
             print(f"\nFound user: {user.username}")
             print(f"Email: {user.email}")
             print(f"Verification code: {user.verification_code}")
             print(f"Code expires: {user.verification_code_expires}")
-            
+
             if user.verify_email(code):
                 print("Email verified successfully!")
                 try:
@@ -222,14 +228,14 @@ def verify_email():
         else:
             print(f"No user found with code: {code}")
             flash('Invalid verification code', 'error')
-            
+
     return render_template('auth/verify_email.html', title='Verify Email')
 
 @bp.route('/resend-verification')
 def resend_verification():
     if current_user.is_authenticated and current_user.email_verified:
         return redirect(url_for('main.index'))
-        
+
     user = User.query.filter_by(email_verified=False).order_by(User.id.desc()).first()
     if user:
         print(f"\n[RESEND] Resending verification email to user {user.username}")
@@ -240,7 +246,7 @@ def resend_verification():
     else:
         print("[RESEND] No pending verification found")
         flash('No pending verification found', 'error')
-        
+
     return redirect(url_for('auth.verify_email'))
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -255,7 +261,7 @@ def login():
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password', 'error')
             return redirect(url_for('auth.login'))
-            
+
         if not user.email_verified:
             flash('Please verify your email before logging in', 'error')
             return redirect(url_for('auth.verify_email'))
@@ -282,29 +288,7 @@ def settings():
     if request.method == 'POST':
         action = request.form.get('action')
 
-        if action == 'update_email':
-            try:
-                email = request.form.get('email')
-                if email != current_user.email:  # Only check if email is actually changing
-                    # Check if email is already taken
-                    existing_user = User.query.filter_by(email=email).first()
-                    if existing_user:
-                        flash('Email already registered.', 'error')
-                        return redirect(url_for('auth.settings'))
-                    
-                    # Update directly in the database
-                    db.session.execute(
-                        "UPDATE \"user\" SET email = :email WHERE id = :user_id",
-                        {"email": email, "user_id": current_user.id}
-                    )
-                    db.session.commit()
-                    flash('Email updated successfully.', 'success')
-            except Exception as e:
-                print(f"Error updating email: {str(e)}")
-                db.session.rollback()
-                flash('An error occurred while updating email.', 'error')
-
-        elif action == 'update_password':
+        if action == 'update_password':
             try:
                 current_password = request.form.get('current_password')
                 new_password = request.form.get('new_password')
@@ -328,23 +312,28 @@ def settings():
         elif action == 'update_username':
             try:
                 new_username = request.form.get('new_username', '').strip()
-                
+
                 # Validate username
                 if not new_username:
                     flash('Username cannot be empty.', 'error')
                     return redirect(url_for('auth.settings'))
-                    
+
                 if len(new_username) < 3 or len(new_username) > 64:
                     flash('Username must be between 3 and 64 characters.', 'error')
                     return redirect(url_for('auth.settings'))
-                    
+
+                # Validate username format (letters and numbers only)
+                if not re.match('^[a-zA-Z0-9]+$', new_username):
+                    flash('Username can only contain letters and numbers.', 'error')
+                    return redirect(url_for('auth.settings'))
+
                 # Check if username is already taken
                 if new_username != current_user.username:  # Only check if username is actually changing
                     existing_user = User.query.filter_by(username=new_username).first()
                     if existing_user:
                         flash('Username is already taken.', 'error')
                         return redirect(url_for('auth.settings'))
-                    
+
                     # Update directly in the database
                     db.session.execute(
                         "UPDATE \"user\" SET username = :username WHERE id = :user_id",
@@ -364,7 +353,7 @@ def settings():
 @bp.route('/profile/<username>')
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
-    
+
     # If profile is private and current user is not the owner, show private message
     if user.private_profile and (not current_user.is_authenticated or current_user.id != user.id):
         flash('This profile is private.', 'error')
@@ -411,21 +400,21 @@ def profile(username):
 
     # Calculate category statistics
     category_stats = {}
-    
+
     for result in quiz_results:
         # Skip custom quizzes for category stats
         if ',' in result.category or result.category.startswith('custom'):
             continue
-            
+
         # Chart data
         chart_data['dates'].append(result.completed_at.strftime('%Y-%m-%d'))
         chart_data['scores'].append(result.percentage)
         chart_data['categories'].append(result.category)
-        
+
         # Activity data (count quizzes per month)
         month_key = result.completed_at.strftime('%B %Y')
         chart_data['activity'][month_key] = chart_data['activity'].get(month_key, 0) + 1
-        
+
         # Category statistics
         if result.category not in category_stats:
             category_stats[result.category] = {
@@ -433,7 +422,7 @@ def profile(username):
                 'total_score': 0,
                 'best_score': 0
             }
-        
+
         stats = category_stats[result.category]
         stats['count'] += 1
         stats['total_score'] += result.percentage
@@ -460,21 +449,21 @@ def update_profile_privacy():
         print(f"Updating privacy settings for user {current_user.username}")
         private_profile = 'private_profile' in request.form
         print(f"Setting private_profile to: {private_profile}")
-        
+
         # Update directly in the database
         db.session.execute(
             "UPDATE \"user\" SET private_profile = :private_profile WHERE id = :user_id",
             {"private_profile": private_profile, "user_id": current_user.id}
         )
         db.session.commit()
-        
+
         print("Privacy settings updated successfully")
         flash('Privacy settings updated successfully.', 'success')
     except Exception as e:
         print(f"Error updating privacy settings: {str(e)}")
         db.session.rollback()
         flash('An error occurred while updating privacy settings.', 'error')
-    
+
     return redirect(url_for('auth.settings'))
 
 @bp.route('/profile/social-media/update', methods=['POST'])
@@ -492,7 +481,7 @@ def update_social_media():
         stackoverflow = request.form.get('stackoverflow_url', '').strip()
         medium = request.form.get('medium_username', '').strip()
         dev_to = request.form.get('dev_to_username', '').strip()
-        
+
         # Basic validation
         if linkedin and not linkedin.startswith(('http://', 'https://')):
             linkedin = f'https://{linkedin}'
@@ -500,14 +489,14 @@ def update_social_media():
             website = f'https://{website}'
         if stackoverflow and not stackoverflow.startswith(('http://', 'https://')):
             stackoverflow = f'https://{stackoverflow}'
-            
+
         # Remove @ from Twitter username if present
         if twitter.startswith('@'):
             twitter = twitter[1:]
-            
+
         # Update directly in the database
         db.session.execute("""
-            UPDATE "user" SET 
+            UPDATE "user" SET
                 twitter_username = :twitter,
                 bluesky_handle = :bluesky,
                 linkedin_url = :linkedin,
@@ -532,21 +521,21 @@ def update_social_media():
             "dev_to": dev_to or None,
             "user_id": current_user.id
         })
-        
+
         db.session.commit()
         flash('Social media links updated successfully.', 'success')
     except Exception as e:
         print(f"Error updating social media: {str(e)}")
         db.session.rollback()
         flash('An error occurred while updating social media links.', 'error')
-    
+
     return redirect(url_for('auth.settings'))
 
 @bp.route('/reset-password-request', methods=['GET', 'POST'])
 def reset_password_request():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    
+
     form = RequestPasswordResetForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -555,21 +544,21 @@ def reset_password_request():
             return redirect(url_for('auth.login'))
         else:
             flash('An error occurred while sending the password reset email. Please try again later.', 'error')
-    
+
     return render_template('auth/reset_password_request.html', title='Reset Password', form=form)
 
 @bp.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    
+
     # Find user with this token
     user = User.query.filter_by(reset_password_token=token).first()
-    
+
     if not user or not user.verify_reset_token(token):
         flash('Invalid or expired reset token', 'error')
         return redirect(url_for('auth.reset_password_request'))
-    
+
     form = ResetPasswordForm()
     if form.validate_on_submit():
         user.set_password(form.password.data)
@@ -577,7 +566,7 @@ def reset_password(token):
         db.session.commit()
         flash('Your password has been reset.', 'success')
         return redirect(url_for('auth.login'))
-    
+
     return render_template('auth/reset_password.html', form=form)
 
 @bp.route('/profile/username/update', methods=['POST'])
@@ -585,30 +574,30 @@ def reset_password(token):
 def update_username():
     try:
         new_username = request.form.get('new_username', '').strip()
-        
+
         # Validate username
         if not new_username:
             flash('Username cannot be empty.', 'error')
             return redirect(url_for('auth.settings'))
-            
+
         if len(new_username) < 3 or len(new_username) > 64:
             flash('Username must be between 3 and 64 characters.', 'error')
             return redirect(url_for('auth.settings'))
-            
+
         # Check if username is already taken
         existing_user = User.query.filter_by(username=new_username).first()
         if existing_user and existing_user.id != current_user.id:
             flash('Username is already taken.', 'error')
             return redirect(url_for('auth.settings'))
-            
+
         # Update username
         current_user.username = new_username
         db.session.commit()
         flash('Username updated successfully.', 'success')
-        
+
     except Exception as e:
         print(f"Error updating username: {str(e)}")
         db.session.rollback()
         flash('An error occurred while updating username.', 'error')
-    
+
     return redirect(url_for('auth.settings'))
