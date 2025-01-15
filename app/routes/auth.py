@@ -353,13 +353,18 @@ def profile(username):
 @bp.route('/profile/privacy/update', methods=['POST'])
 @login_required
 def update_profile_privacy():
-    private_profile = request.form.get('private_profile') == 'on'
-    current_user.private_profile = private_profile
     try:
+        # Get the checkbox value
+        private_profile = 'private_profile' in request.form
+        
+        # Update user's privacy setting
+        current_user.private_profile = private_profile
         db.session.commit()
+        
         flash('Privacy settings updated successfully.', 'success')
     except Exception as e:
         db.session.rollback()
         flash('An error occurred while updating privacy settings.', 'error')
         print(f"Error updating privacy settings: {str(e)}")
+    
     return redirect(url_for('auth.settings'))

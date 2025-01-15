@@ -144,7 +144,7 @@ def leaderboard():
     time_filter = request.args.get('time', 'all')
     category = request.args.get('category', 'all')
     
-    # Base query
+    # Base query for user statistics
     base_query = db.session.query(
         User,
         func.count(QuizResult.id).label('total_quizzes'),
@@ -164,7 +164,7 @@ def leaderboard():
     if category != 'all':
         base_query = base_query.filter(QuizResult.category == category)
 
-    # Group and filter private profiles
+    # Group by user and filter out private profiles
     base_query = base_query.group_by(User).filter(User.private_profile == False)
 
     # Get top users by perfect scores
@@ -176,14 +176,14 @@ def leaderboard():
     # Get users with best average scores (minimum 5 quizzes)
     best_average = base_query.having(func.count(QuizResult.id) >= 5).order_by(text('avg_score DESC')).limit(10).all()
 
-    # Get categories from quiz results
+    # Get unique categories from quiz results
     categories = db.session.query(QuizResult.category).distinct().all()
-    categories = [cat[0] for cat in categories]
+    categories = sorted([cat[0] for cat in categories])
 
     return render_template('leaderboard.html',
                          perfect_scores=perfect_scores,
                          most_active=most_active,
                          best_average=best_average,
-                         categories=sorted(categories),
+                         categories=categories,
                          selected_time=time_filter,
                          selected_category=category)
