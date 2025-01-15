@@ -281,66 +281,70 @@ def settings():
     """Page des paramètres utilisateur"""
     if request.method == 'POST':
         action = request.form.get('action')
+        print(f"\n==== SETTINGS UPDATE ====")
+        print(f"Action: {action}")
+        print(f"Current user: {current_user.username}")
+        print(f"Form data: {request.form}")
 
-        if action == 'update_email':
-            email = request.form.get('email')
-            if email != current_user.email:  # Only check if email is actually changing
-                if User.query.filter_by(email=email).first():
-                    flash('Email already registered.', 'error')
-                    return redirect(url_for('auth.settings'))
-                current_user.email = email
-                try:
+        try:
+            if action == 'update_email':
+                email = request.form.get('email')
+                print(f"New email: {email}")
+                if email != current_user.email:
+                    if User.query.filter_by(email=email).first():
+                        flash('Email already registered.', 'error')
+                        return redirect(url_for('auth.settings'))
+                    current_user.email = email
+                    db.session.add(current_user)
                     db.session.commit()
                     flash('Email updated successfully.', 'success')
-                except Exception as e:
-                    db.session.rollback()
-                    flash('An error occurred while updating email.', 'error')
-                    print(f"Error updating email: {str(e)}")
 
-        elif action == 'update_password':
-            current_password = request.form.get('current_password')
-            new_password = request.form.get('new_password')
+            elif action == 'update_password':
+                current_password = request.form.get('current_password')
+                new_password = request.form.get('new_password')
 
-            if not current_user.check_password(current_password):
-                flash('Current password is incorrect.', 'error')
-            else:
-                current_user.set_password(new_password)
-                try:
+                if not current_user.check_password(current_password):
+                    flash('Current password is incorrect.', 'error')
+                else:
+                    current_user.set_password(new_password)
+                    db.session.add(current_user)
                     db.session.commit()
                     flash('Password updated successfully.', 'success')
-                except Exception as e:
-                    db.session.rollback()
-                    flash('An error occurred while updating password.', 'error')
-                    print(f"Error updating password: {str(e)}")
 
-        elif action == 'update_username':
-            new_username = request.form.get('new_username', '').strip()
-            
-            # Validate username
-            if not new_username:
-                flash('Username cannot be empty.', 'error')
-                return redirect(url_for('auth.settings'))
+            elif action == 'update_username':
+                new_username = request.form.get('new_username', '').strip()
+                print(f"New username: {new_username}")
                 
-            if len(new_username) < 3 or len(new_username) > 64:
-                flash('Username must be between 3 and 64 characters.', 'error')
-                return redirect(url_for('auth.settings'))
-                
-            # Check if username is already taken
-            if new_username != current_user.username:  # Only check if username is actually changing
-                existing_user = User.query.filter_by(username=new_username).first()
-                if existing_user:
-                    flash('Username is already taken.', 'error')
+                # Validate username
+                if not new_username:
+                    flash('Username cannot be empty.', 'error')
                     return redirect(url_for('auth.settings'))
-                
-                # Update username
-                current_user.username = new_username
-                try:
+                    
+                if len(new_username) < 3 or len(new_username) > 64:
+                    flash('Username must be between 3 and 64 characters.', 'error')
+                    return redirect(url_for('auth.settings'))
+                    
+                # Check if username is already taken
+                if new_username != current_user.username:
+                    existing_user = User.query.filter_by(username=new_username).first()
+                    if existing_user:
+                        flash('Username is already taken.', 'error')
+                        return redirect(url_for('auth.settings'))
+                    
+                    # Update username
+                    current_user.username = new_username
+                    db.session.add(current_user)
                     db.session.commit()
                     flash('Username updated successfully.', 'success')
-                except Exception as e:
-                    db.session.rollback()
-                    flash('An error occurred while updating username.', 'error')
-                    print(f"Error updating username: {str(e)}")
+                    print(f"Username updated to: {current_user.username}")
+
+        except Exception as e:
+            print(f"\n==== ERROR ====")
+            print(f"Error type: {type(e).__name__}")
+            print(f"Error message: {str(e)}")
+            print("===============\n")
+            db.session.rollback()
+            flash('An error occurred while updating settings.', 'error')
 
         return redirect(url_for('auth.settings'))
 
@@ -446,11 +450,8 @@ def update_profile_privacy():
         private_profile = 'private_profile' in request.form
         print(f"Setting private_profile to: {private_profile}")
         
-        # Update directly in the database
-        db.session.execute(
-            "UPDATE \"user\" SET private_profile = :private_profile WHERE id = :user_id",
-            {"private_profile": private_profile, "user_id": current_user.id}
-        )
+        current_user.private_profile = private_profile
+        db.session.add(current_user)
         db.session.commit()
         
         print("Privacy settings updated successfully")
@@ -490,34 +491,19 @@ def update_social_media():
         if twitter.startswith('@'):
             twitter = twitter[1:]
             
-        # Update directly in the database
-        db.session.execute("""
-            UPDATE "user" SET 
-                twitter_username = :twitter,
-                bluesky_handle = :bluesky,
-                linkedin_url = :linkedin,
-                website_url = :website,
-                github_username = :github,
-                gitlab_username = :gitlab,
-                dockerhub_username = :dockerhub,
-                stackoverflow_url = :stackoverflow,
-                medium_username = :medium,
-                dev_to_username = :dev_to
-            WHERE id = :user_id
-        """, {
-            "twitter": twitter or None,
-            "bluesky": bluesky or None,
-            "linkedin": linkedin or None,
-            "website": website or None,
-            "github": github or None,
-            "gitlab": gitlab or None,
-            "dockerhub": dockerhub or None,
-            "stackoverflow": stackoverflow or None,
-            "medium": medium or None,
-            "dev_to": dev_to or None,
-            "user_id": current_user.id
-        })
+        # Update user object
+        current_user.twitter_username = twitter or None
+        current_user.bluesky_handle = bluesky or None
+        current_user.linkedin_url = linkedin or None
+        current_user.website_url = website or None
+        current_user.github_username = github or None
+        current_user.gitlab_username = gitlab or None
+        current_user.dockerhub_username = dockerhub or None
+        current_user.stackoverflow_url = stackoverflow or None
+        current_user.medium_username = medium or None
+        current_user.dev_to_username = dev_to or None
         
+        db.session.add(current_user)
         db.session.commit()
         flash('Social media links updated successfully.', 'success')
     except Exception as e:
