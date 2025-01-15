@@ -407,17 +407,33 @@ def update_social_media():
         if twitter.startswith('@'):
             twitter = twitter[1:]
             
-        # Update user
-        current_user.twitter_username = twitter or None
-        current_user.bluesky_handle = bluesky or None
-        current_user.linkedin_url = linkedin or None
-        current_user.website_url = website or None
-        current_user.github_username = github or None
-        current_user.gitlab_username = gitlab or None
-        current_user.dockerhub_username = dockerhub or None
-        current_user.stackoverflow_url = stackoverflow or None
-        current_user.medium_username = medium or None
-        current_user.dev_to_username = dev_to or None
+        # Update directly in the database
+        db.session.execute("""
+            UPDATE "user" SET 
+                twitter_username = :twitter,
+                bluesky_handle = :bluesky,
+                linkedin_url = :linkedin,
+                website_url = :website,
+                github_username = :github,
+                gitlab_username = :gitlab,
+                dockerhub_username = :dockerhub,
+                stackoverflow_url = :stackoverflow,
+                medium_username = :medium,
+                dev_to_username = :dev_to
+            WHERE id = :user_id
+        """, {
+            "twitter": twitter or None,
+            "bluesky": bluesky or None,
+            "linkedin": linkedin or None,
+            "website": website or None,
+            "github": github or None,
+            "gitlab": gitlab or None,
+            "dockerhub": dockerhub or None,
+            "stackoverflow": stackoverflow or None,
+            "medium": medium or None,
+            "dev_to": dev_to or None,
+            "user_id": current_user.id
+        })
         
         db.session.commit()
         flash('Social media links updated successfully.', 'success')
