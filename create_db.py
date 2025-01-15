@@ -95,7 +95,7 @@ def init_db():
     db.create_all()
 
     print('Création des tables...')
-    
+
     # Vérification des tables créées
     tables = db.engine.table_names()
     print('\nTables créées:')
@@ -110,8 +110,13 @@ def init_db():
         print('\nToutes les tables attendues ont été créées avec succès!')
         print(f'Base de données créée à: quizops')
 
-        # Création de l'utilisateur admin
-        create_admin_user()
+        # Vérifie si l'utilisateur admin existe déjà
+        existing_admin = User.query.filter_by(username='admin').first()
+        if not existing_admin:
+            # Création de l'utilisateur admin
+            create_admin_user()
+        else:
+            print('L\'utilisateur admin existe déjà.')
     else:
         missing = expected_tables - actual_tables
         extra = actual_tables - expected_tables
