@@ -315,6 +315,10 @@ def profile(username):
     category_stats = {}
     
     for result in quiz_results:
+        # Skip custom quizzes for category stats
+        if ',' in result.category or result.category.startswith('custom'):
+            continue
+            
         # Chart data
         chart_data['dates'].append(result.completed_at.strftime('%Y-%m-%d'))
         chart_data['scores'].append(result.percentage)
@@ -355,14 +359,9 @@ def profile(username):
 @login_required
 def update_profile_privacy():
     try:
-        # Get the checkbox value
         private_profile = 'private_profile' in request.form
-        
-        # Update user's privacy setting
         current_user.private_profile = private_profile
-        db.session.add(current_user)  # Ensure the instance is tracked
         db.session.commit()
-        
         flash('Privacy settings updated successfully.', 'success')
     except Exception as e:
         db.session.rollback()
