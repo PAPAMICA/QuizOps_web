@@ -4,7 +4,7 @@ from app.models.user import User, QuizResult
 from app import db, mail
 from urllib.parse import urlparse
 from werkzeug.security import check_password_hash
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm, RegistrationForm, RequestPasswordResetForm, ResetPasswordForm
 from flask_mail import Message
 import os
 import yaml
@@ -62,6 +62,49 @@ The QuizOps Team</p>'''
         print(f"Error type: {type(e).__name__}")
         print(f"Error message: {str(e)}")
         print("====================\n")
+        return False
+
+def send_password_reset_email(user):
+    token = user.generate_reset_token()
+    msg = Message('QuizOps - Password Reset Request',
+                 sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                 recipients=[user.email])
+    
+    reset_url = url_for('auth.reset_password', token=token, _external=True)
+    
+    msg.body = f'''Hi {user.username},
+
+To reset your password, visit the following link:
+
+{reset_url}
+
+If you did not make this request, please ignore this email.
+
+Best regards,
+The QuizOps Team'''
+
+    msg.html = f'''
+<p>Hi {user.username},</p>
+
+<p>To reset your password, click the button below:</p>
+
+<p style="text-align: center;">
+    <a href="{reset_url}" 
+       style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 4px;">
+        Reset Password
+    </a>
+</p>
+
+<p>If you did not make this request, please ignore this email.</p>
+
+<p>Best regards,<br>
+The QuizOps Team</p>'''
+
+    try:
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Error sending password reset email: {str(e)}")
         return False
 
 @bp.route('/register', methods=['GET', 'POST'])
@@ -443,3 +486,41 @@ def update_social_media():
         flash('An error occurred while updating social media links.', 'error')
     
     return redirect(url_for('auth.settings'))
+
+@bp.route('/reset-password-request', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and send_password_reset_email(user):
+            flash('Check your email for the instructions to reset your password', 'success')
+            return redirect(url_for('auth.login'))
+        else:
+            flash('An error occurred while sending the password reset email. Please try again later.', 'error')
+    
+    return render_template('auth/reset_password_request.html', title='Reset Password', form=form)
+
+@bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    # Find user with this token
+    user = User.query.filter_by(reset_password_token=token).first()
+    
+    if not user or not user.verify_reset_token(token):
+        flash('Invalid or expired reset token', 'error')
+        return redirect(url_for('auth.reset_password_request'))
+    
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        user.clear_reset_token()
+        db.session.commit()
+        flash('Your password has been reset.', 'success')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/reset_password.html', form=form)

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, current_app, g, request
 from flask_login import current_user, login_required
-from sqlalchemy import func, desc, text, case
+from sqlalchemy import func, desc, text, case, cast, Float
 from app.models import User, QuizResult
 from app import db
 import os
@@ -148,9 +148,9 @@ def leaderboard():
     base_query = db.session.query(
         User,
         func.count(QuizResult.id).label('total_quizzes'),
-        func.avg(QuizResult.score * 100.0 / QuizResult.max_score).label('avg_score'),
+        func.round(cast(func.sum(QuizResult.score * 100.0), Float) / cast(func.sum(QuizResult.max_score), Float), 1).label('avg_score'),
         func.sum(case((QuizResult.score == QuizResult.max_score, 1), else_=0)).label('perfect_scores')
-    ).join(QuizResult)
+    ).join(QuizResult).filter(~QuizResult.category.like('custom%'))  # Exclude custom quizzes
 
     # Apply time filter
     if time_filter != 'all':
@@ -176,8 +176,10 @@ def leaderboard():
     # Get users with best average scores (minimum 5 quizzes)
     best_average = base_query.having(func.count(QuizResult.id) >= 5).order_by(text('avg_score DESC')).limit(10).all()
 
-    # Get unique categories from quiz results
-    categories = db.session.query(QuizResult.category).distinct().all()
+    # Get unique categories from quiz results, excluding custom quizzes
+    categories = db.session.query(QuizResult.category).filter(
+        ~QuizResult.category.like('custom%')
+    ).distinct().all()
     categories = sorted([cat[0] for cat in categories])
 
     return render_template('leaderboard.html',

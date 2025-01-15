@@ -146,6 +146,28 @@
                     </button>
                 </form>
             </div>
+
+            <!-- Username Settings -->
+            <div class="mb-8 p-6 bg-gray-900 rounded-lg shadow-md border border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-100 mb-4">Username Settings</h3>
+                <form method="POST" action="{{ url_for('auth.update_username') }}" class="space-y-4">
+                    <div>
+                        <label for="current_username" class="block text-sm font-medium text-gray-300">Current Username</label>
+                        <input type="text" id="current_username" value="{{ current_user.username }}" disabled
+                               class="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-gray-400">
+                    </div>
+                    <div>
+                        <label for="new_username" class="block text-sm font-medium text-gray-300">New Username</label>
+                        <input type="text" name="new_username" id="new_username" required
+                               class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                               placeholder="Enter new username">
+                    </div>
+                    <p class="text-sm text-gray-400">Choose a unique username between 3 and 64 characters.</p>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-150">
+                        Update Username
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- Email Settings -->

@@ -4,8 +4,7 @@ from config import Config
 import os
 from werkzeug.security import generate_password_hash
 from datetime import datetime
-from app import create_app, db
-from app.models.user import User, QuizResult
+import uuid
 
 # Create a minimal application
 app = Flask(__name__)
@@ -38,7 +37,7 @@ db = SQLAlchemy(app)
 # Import models
 class User(db.Model):
     __tablename__ = 'user'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
@@ -47,6 +46,8 @@ class User(db.Model):
     email_verified = db.Column(db.Boolean, default=False)
     verification_code = db.Column(db.String(6))
     verification_code_expires = db.Column(db.DateTime)
+    reset_password_token = db.Column(db.String(100), unique=True)
+    reset_password_expires = db.Column(db.DateTime)
     is_admin = db.Column(db.Boolean, default=False)
     private_profile = db.Column(db.Boolean, default=False)
     
@@ -68,7 +69,7 @@ class User(db.Model):
 class QuizResult(db.Model):
     __tablename__ = 'quiz_result'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)
     quiz_id = db.Column(db.String(64), nullable=False)
     quiz_title = db.Column(db.String(256))
     category = db.Column(db.String(256), nullable=False)
