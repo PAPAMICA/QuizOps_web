@@ -8,6 +8,7 @@ from sqlalchemy.exc import OperationalError
 import time
 import uuid
 from datetime import datetime
+from app.utils.db_utils import session_manager
 
 bp = Blueprint('quiz', __name__)
 
@@ -270,24 +271,23 @@ def show_results(quiz_id):
 
     score_percentage = round((correct_answers / total_questions) * 100)
 
-    try:
-        # Sauvegarder le résultat dans la base de données
-        quiz_result = QuizResult(
-            user_id=current_user.id,
-            quiz_id=quiz_id,
-            category=quiz.get('category', ''),
-            level=quiz.get('level', ''),
-            score=correct_answers,
-            max_score=total_questions,
-            answers=answers_data,
-            time_spent=0,  # TODO: Implémenter le tracking du temps
-            quiz_title=quiz.get('title', quiz_id) if not quiz_id.startswith('custom_') else f"Custom Quiz - {quiz.get('category', '')} ({quiz.get('level', '')})"
-        )
-        db.session.add(quiz_result)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error saving quiz result: {e}")
+    with session_manager():
+        try:
+            quiz_result = QuizResult(
+                user_id=current_user.id,
+                quiz_id=quiz_id,
+                category=quiz.get('category', ''),
+                level=quiz.get('level', ''),
+                score=correct_answers,
+                max_score=total_questions,
+                answers=answers_data,
+                time_spent=0,
+                quiz_title=quiz.get('title', quiz_id) if not quiz_id.startswith('custom_') else f"Custom Quiz - {quiz.get('category', '')} ({quiz.get('level', '')})"
+            )
+            db.session.add(quiz_result)
+        except Exception as e:
+            current_app.logger.error(f"Error saving quiz result: {e}")
+            raise
 
     # Nettoyer la session
     session.pop('current_quiz', None)
