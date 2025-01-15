@@ -378,3 +378,52 @@ def update_profile_privacy():
         flash('An error occurred while updating privacy settings.', 'error')
     
     return redirect(url_for('auth.settings'))
+
+@bp.route('/profile/social-media/update', methods=['POST'])
+@login_required
+def update_social_media():
+    try:
+        # Get values from form
+        twitter = request.form.get('twitter_username', '').strip()
+        bluesky = request.form.get('bluesky_handle', '').strip()
+        linkedin = request.form.get('linkedin_url', '').strip()
+        website = request.form.get('website_url', '').strip()
+        github = request.form.get('github_username', '').strip()
+        gitlab = request.form.get('gitlab_username', '').strip()
+        dockerhub = request.form.get('dockerhub_username', '').strip()
+        stackoverflow = request.form.get('stackoverflow_url', '').strip()
+        medium = request.form.get('medium_username', '').strip()
+        dev_to = request.form.get('dev_to_username', '').strip()
+        
+        # Basic validation
+        if linkedin and not linkedin.startswith(('http://', 'https://')):
+            linkedin = f'https://{linkedin}'
+        if website and not website.startswith(('http://', 'https://')):
+            website = f'https://{website}'
+        if stackoverflow and not stackoverflow.startswith(('http://', 'https://')):
+            stackoverflow = f'https://{stackoverflow}'
+            
+        # Remove @ from Twitter username if present
+        if twitter.startswith('@'):
+            twitter = twitter[1:]
+            
+        # Update user
+        current_user.twitter_username = twitter or None
+        current_user.bluesky_handle = bluesky or None
+        current_user.linkedin_url = linkedin or None
+        current_user.website_url = website or None
+        current_user.github_username = github or None
+        current_user.gitlab_username = gitlab or None
+        current_user.dockerhub_username = dockerhub or None
+        current_user.stackoverflow_url = stackoverflow or None
+        current_user.medium_username = medium or None
+        current_user.dev_to_username = dev_to or None
+        
+        db.session.commit()
+        flash('Social media links updated successfully.', 'success')
+    except Exception as e:
+        print(f"Error updating social media: {str(e)}")
+        db.session.rollback()
+        flash('An error occurred while updating social media links.', 'error')
+    
+    return redirect(url_for('auth.settings'))

@@ -18,6 +18,89 @@
                     </span>
                     {% endif %}
                     <p class="text-gray-400 mt-1">Member since {{ user.created_at.strftime('%B %Y') }}</p>
+                    
+                    <!-- Social Media Links -->
+                    <div class="flex items-center space-x-3 mt-2">
+                        {% if user.github_username %}
+                        <a href="https://github.com/{{ user.github_username }}" target="_blank" 
+                           class="text-white hover:text-gray-300 transition-colors duration-150"
+                           title="GitHub">
+                            <i class="fab fa-github text-lg"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.gitlab_username %}
+                        <a href="https://gitlab.com/{{ user.gitlab_username }}" target="_blank"
+                           class="text-[#FC6D26] hover:text-[#E24329] transition-colors duration-150"
+                           title="GitLab">
+                            <i class="fab fa-gitlab text-lg"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.dockerhub_username %}
+                        <a href="https://hub.docker.com/u/{{ user.dockerhub_username }}" target="_blank"
+                           class="text-[#2496ED] hover:text-[#1D7EB5] transition-colors duration-150"
+                           title="Docker Hub">
+                            <i class="fab fa-docker text-lg"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.stackoverflow_url %}
+                        <a href="{{ user.stackoverflow_url }}" target="_blank"
+                           class="text-[#F48024] hover:text-[#DA6C0A] transition-colors duration-150"
+                           title="Stack Overflow">
+                            <i class="fab fa-stack-overflow text-lg"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.medium_username %}
+                        <a href="https://medium.com/@{{ user.medium_username }}" target="_blank"
+                           class="text-white hover:text-gray-300 transition-colors duration-150"
+                           title="Medium">
+                            <i class="fab fa-medium text-lg"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.dev_to_username %}
+                        <a href="https://dev.to/{{ user.dev_to_username }}" target="_blank"
+                           class="text-white hover:text-gray-300 transition-colors duration-150"
+                           title="Dev.to">
+                            <i class="fab fa-dev text-lg"></i>
+                        </a>
+                        {% endif %}
+
+                        {% if user.twitter_username %}
+                        <a href="https://twitter.com/{{ user.twitter_username }}" target="_blank" 
+                           class="text-[#1DA1F2] hover:text-[#1a91da] transition-colors duration-150"
+                           title="Twitter">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.bluesky_handle %}
+                        <a href="https://bsky.app/profile/{{ user.bluesky_handle }}" target="_blank"
+                           class="text-[#0085ff] hover:text-[#0076e6] transition-colors duration-150"
+                           title="Bluesky">
+                            <i class="fas fa-cloud text-lg"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.linkedin_url %}
+                        <a href="{{ user.linkedin_url }}" target="_blank"
+                           class="text-[#0077b5] hover:text-[#006699] transition-colors duration-150"
+                           title="LinkedIn">
+                            <i class="fab fa-linkedin text-lg"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.website_url %}
+                        <a href="{{ user.website_url }}" target="_blank"
+                           class="text-gray-400 hover:text-gray-300 transition-colors duration-150"
+                           title="Website">
+                            <i class="fas fa-globe text-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% if current_user.id == user.id %}

@@ -17,6 +17,18 @@ class User(UserMixin, db.Model):
     verification_code_expires = db.Column(db.DateTime)
     is_admin = db.Column(db.Boolean, default=False)
     private_profile = db.Column(db.Boolean, default=False)
+    
+    # Social media fields
+    twitter_username = db.Column(db.String(64))
+    bluesky_handle = db.Column(db.String(64))
+    linkedin_url = db.Column(db.String(128))
+    website_url = db.Column(db.String(128))
+    github_username = db.Column(db.String(64))
+    gitlab_username = db.Column(db.String(64))
+    dockerhub_username = db.Column(db.String(64))
+    stackoverflow_url = db.Column(db.String(128))
+    medium_username = db.Column(db.String(64))
+    dev_to_username = db.Column(db.String(64))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
