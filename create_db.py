@@ -11,7 +11,7 @@ from app.models.user import User, QuizResult
 app = Flask(__name__)
 
 # Configure the database URI for PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@db:5432/quizops'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@quizops-db:5432/quizops'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
