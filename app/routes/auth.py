@@ -3,14 +3,11 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.models.user import User, QuizResult
 from app import db, mail
 from urllib.parse import urlparse
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from app.forms import LoginForm, RegistrationForm, RequestPasswordResetForm, ResetPasswordForm
 from flask_mail import Message
 import os
 import yaml
-from werkzeug.utils import secure_filename
-import time
-from sqlalchemy.sql import text
 
 bp = Blueprint('auth', __name__)
 
@@ -284,47 +281,53 @@ def settings():
     """Page des paramètres utilisateur"""
     if request.method == 'POST':
         action = request.form.get('action')
-        print(f"\n==== SETTINGS UPDATE ====")
-        print(f"Action: {action}")
-        print(f"Current user: {current_user.username}")
-        print(f"Form data: {request.form}")
 
-        try:
-            # Get a fresh user object from the database using UUID
-            user = User.query.get(current_user.id)
-            if not user:
-                flash('User not found.', 'error')
-                return redirect(url_for('auth.settings'))
-            
-            if action == 'update_email':
+        if action == 'update_email':
+            try:
                 email = request.form.get('email')
-                print(f"New email: {email}")
-                if email != user.email:
-                    if User.query.filter_by(email=email).first():
+                if email != current_user.email:  # Only check if email is actually changing
+                    # Check if email is already taken
+                    existing_user = User.query.filter_by(email=email).first()
+                    if existing_user:
                         flash('Email already registered.', 'error')
                         return redirect(url_for('auth.settings'))
-                    user.email = email
+                    
+                    # Update directly in the database
+                    db.session.execute(
+                        "UPDATE \"user\" SET email = :email WHERE id = :user_id",
+                        {"email": email, "user_id": current_user.id}
+                    )
                     db.session.commit()
-                    # Refresh the user session
-                    login_user(user)
                     flash('Email updated successfully.', 'success')
+            except Exception as e:
+                print(f"Error updating email: {str(e)}")
+                db.session.rollback()
+                flash('An error occurred while updating email.', 'error')
 
-            elif action == 'update_password':
+        elif action == 'update_password':
+            try:
                 current_password = request.form.get('current_password')
                 new_password = request.form.get('new_password')
 
-                if not user.check_password(current_password):
+                if not current_user.check_password(current_password):
                     flash('Current password is incorrect.', 'error')
                 else:
-                    user.set_password(new_password)
+                    # Update password hash directly in the database
+                    password_hash = generate_password_hash(new_password)
+                    db.session.execute(
+                        "UPDATE \"user\" SET password_hash = :password_hash WHERE id = :user_id",
+                        {"password_hash": password_hash, "user_id": current_user.id}
+                    )
                     db.session.commit()
-                    # Refresh the user session
-                    login_user(user)
                     flash('Password updated successfully.', 'success')
+            except Exception as e:
+                print(f"Error updating password: {str(e)}")
+                db.session.rollback()
+                flash('An error occurred while updating password.', 'error')
 
-            elif action == 'update_username':
+        elif action == 'update_username':
+            try:
                 new_username = request.form.get('new_username', '').strip()
-                print(f"New username: {new_username}")
                 
                 # Validate username
                 if not new_username:
@@ -336,27 +339,23 @@ def settings():
                     return redirect(url_for('auth.settings'))
                     
                 # Check if username is already taken
-                if new_username != user.username:
+                if new_username != current_user.username:  # Only check if username is actually changing
                     existing_user = User.query.filter_by(username=new_username).first()
                     if existing_user:
                         flash('Username is already taken.', 'error')
                         return redirect(url_for('auth.settings'))
                     
-                    # Update username
-                    user.username = new_username
+                    # Update directly in the database
+                    db.session.execute(
+                        "UPDATE \"user\" SET username = :username WHERE id = :user_id",
+                        {"username": new_username, "user_id": current_user.id}
+                    )
                     db.session.commit()
-                    # Refresh the user session
-                    login_user(user)
                     flash('Username updated successfully.', 'success')
-                    print(f"Username updated to: {user.username}")
-
-        except Exception as e:
-            print(f"\n==== ERROR ====")
-            print(f"Error type: {type(e).__name__}")
-            print(f"Error message: {str(e)}")
-            print("===============\n")
-            db.session.rollback()
-            flash('An error occurred while updating settings.', 'error')
+            except Exception as e:
+                print(f"Error updating username: {str(e)}")
+                db.session.rollback()
+                flash('An error occurred while updating username.', 'error')
 
         return redirect(url_for('auth.settings'))
 
@@ -462,16 +461,12 @@ def update_profile_privacy():
         private_profile = 'private_profile' in request.form
         print(f"Setting private_profile to: {private_profile}")
         
-        # Get a fresh user object from the database using UUID
-        user = User.query.get(current_user.id)
-        if not user:
-            flash('User not found.', 'error')
-            return redirect(url_for('auth.settings'))
-            
-        user.private_profile = private_profile
+        # Update directly in the database
+        db.session.execute(
+            "UPDATE \"user\" SET private_profile = :private_profile WHERE id = :user_id",
+            {"private_profile": private_profile, "user_id": current_user.id}
+        )
         db.session.commit()
-        # Refresh the user session
-        login_user(user)
         
         print("Privacy settings updated successfully")
         flash('Privacy settings updated successfully.', 'success')
@@ -510,27 +505,35 @@ def update_social_media():
         if twitter.startswith('@'):
             twitter = twitter[1:]
             
-        # Get a fresh user object from the database using UUID
-        user = User.query.get(current_user.id)
-        if not user:
-            flash('User not found.', 'error')
-            return redirect(url_for('auth.settings'))
-            
-        # Update user object
-        user.twitter_username = twitter or None
-        user.bluesky_handle = bluesky or None
-        user.linkedin_url = linkedin or None
-        user.website_url = website or None
-        user.github_username = github or None
-        user.gitlab_username = gitlab or None
-        user.dockerhub_username = dockerhub or None
-        user.stackoverflow_url = stackoverflow or None
-        user.medium_username = medium or None
-        user.dev_to_username = dev_to or None
+        # Update directly in the database
+        db.session.execute("""
+            UPDATE "user" SET 
+                twitter_username = :twitter,
+                bluesky_handle = :bluesky,
+                linkedin_url = :linkedin,
+                website_url = :website,
+                github_username = :github,
+                gitlab_username = :gitlab,
+                dockerhub_username = :dockerhub,
+                stackoverflow_url = :stackoverflow,
+                medium_username = :medium,
+                dev_to_username = :dev_to
+            WHERE id = :user_id
+        """, {
+            "twitter": twitter or None,
+            "bluesky": bluesky or None,
+            "linkedin": linkedin or None,
+            "website": website or None,
+            "github": github or None,
+            "gitlab": gitlab or None,
+            "dockerhub": dockerhub or None,
+            "stackoverflow": stackoverflow or None,
+            "medium": medium or None,
+            "dev_to": dev_to or None,
+            "user_id": current_user.id
+        })
         
         db.session.commit()
-        # Refresh the user session
-        login_user(user)
         flash('Social media links updated successfully.', 'success')
     except Exception as e:
         print(f"Error updating social media: {str(e)}")
@@ -608,58 +611,4 @@ def update_username():
         db.session.rollback()
         flash('An error occurred while updating username.', 'error')
     
-    return redirect(url_for('auth.settings'))
-
-@bp.route('/profile/picture/update', methods=['POST'])
-@login_required
-def update_profile_picture():
-    try:
-        if 'profile_picture' not in request.files:
-            flash('No file selected.', 'error')
-            return redirect(url_for('auth.settings'))
-            
-        file = request.files['profile_picture']
-        if file.filename == '':
-            flash('No file selected.', 'error')
-            return redirect(url_for('auth.settings'))
-            
-        if not allowed_file(file.filename):
-            flash('Invalid file type. Please upload a PNG, JPG, or JPEG file.', 'error')
-            return redirect(url_for('auth.settings'))
-            
-        # Get current profile picture
-        sql = "SELECT profile_picture FROM users WHERE id = :user_id"
-        current_picture = db.session.execute(text(sql), {'user_id': current_user.id}).scalar()
-            
-        # Delete old profile picture if it exists
-        if current_picture and current_picture != 'default.png':
-            try:
-                old_picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], current_picture)
-                if os.path.exists(old_picture_path):
-                    os.remove(old_picture_path)
-            except Exception as e:
-                print(f"Error deleting old profile picture: {str(e)}")
-                
-        # Save new profile picture
-        filename = secure_filename(file.filename)
-        # Add timestamp to filename to prevent caching issues
-        filename = f"{int(time.time())}_{filename}"
-        file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-        
-        # Update profile picture directly in database
-        sql = "UPDATE users SET profile_picture = :filename WHERE id = :user_id"
-        db.session.execute(text(sql), {'filename': filename, 'user_id': current_user.id})
-        db.session.commit()
-        
-        # Recharger l'utilisateur après la mise à jour
-        user = User.query.get(current_user.id)
-        if user:
-            login_user(user)
-        
-        flash('Profile picture updated successfully.', 'success')
-    except Exception as e:
-        print(f"Error updating profile picture: {str(e)}")
-        db.session.rollback()
-        flash('An error occurred while updating profile picture.', 'error')
-        
     return redirect(url_for('auth.settings'))
