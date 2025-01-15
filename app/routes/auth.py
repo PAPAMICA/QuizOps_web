@@ -8,6 +8,8 @@ from app.forms import LoginForm, RegistrationForm, RequestPasswordResetForm, Res
 from flask_mail import Message
 import os
 import yaml
+from werkzeug.utils import secure_filename
+import time
 
 bp = Blueprint('auth', __name__)
 
@@ -287,8 +289,11 @@ def settings():
         print(f"Form data: {request.form}")
 
         try:
-            # Get a fresh user object from the database
+            # Get a fresh user object from the database using UUID
             user = User.query.get(current_user.id)
+            if not user:
+                flash('User not found.', 'error')
+                return redirect(url_for('auth.settings'))
             
             if action == 'update_email':
                 email = request.form.get('email')
@@ -299,6 +304,8 @@ def settings():
                         return redirect(url_for('auth.settings'))
                     user.email = email
                     db.session.commit()
+                    # Refresh the user session
+                    login_user(user)
                     flash('Email updated successfully.', 'success')
 
             elif action == 'update_password':
@@ -310,6 +317,8 @@ def settings():
                 else:
                     user.set_password(new_password)
                     db.session.commit()
+                    # Refresh the user session
+                    login_user(user)
                     flash('Password updated successfully.', 'success')
 
             elif action == 'update_username':
@@ -335,6 +344,8 @@ def settings():
                     # Update username
                     user.username = new_username
                     db.session.commit()
+                    # Refresh the user session
+                    login_user(user)
                     flash('Username updated successfully.', 'success')
                     print(f"Username updated to: {user.username}")
 
@@ -450,10 +461,16 @@ def update_profile_privacy():
         private_profile = 'private_profile' in request.form
         print(f"Setting private_profile to: {private_profile}")
         
-        # Get a fresh user object from the database
+        # Get a fresh user object from the database using UUID
         user = User.query.get(current_user.id)
+        if not user:
+            flash('User not found.', 'error')
+            return redirect(url_for('auth.settings'))
+            
         user.private_profile = private_profile
         db.session.commit()
+        # Refresh the user session
+        login_user(user)
         
         print("Privacy settings updated successfully")
         flash('Privacy settings updated successfully.', 'success')
@@ -492,9 +509,12 @@ def update_social_media():
         if twitter.startswith('@'):
             twitter = twitter[1:]
             
-        # Get a fresh user object from the database
+        # Get a fresh user object from the database using UUID
         user = User.query.get(current_user.id)
-        
+        if not user:
+            flash('User not found.', 'error')
+            return redirect(url_for('auth.settings'))
+            
         # Update user object
         user.twitter_username = twitter or None
         user.bluesky_handle = bluesky or None
@@ -508,6 +528,8 @@ def update_social_media():
         user.dev_to_username = dev_to or None
         
         db.session.commit()
+        # Refresh the user session
+        login_user(user)
         flash('Social media links updated successfully.', 'success')
     except Exception as e:
         print(f"Error updating social media: {str(e)}")
@@ -585,4 +607,55 @@ def update_username():
         db.session.rollback()
         flash('An error occurred while updating username.', 'error')
     
+    return redirect(url_for('auth.settings'))
+
+@bp.route('/profile/picture/update', methods=['POST'])
+@login_required
+def update_profile_picture():
+    try:
+        if 'profile_picture' not in request.files:
+            flash('No file selected.', 'error')
+            return redirect(url_for('auth.settings'))
+            
+        file = request.files['profile_picture']
+        if file.filename == '':
+            flash('No file selected.', 'error')
+            return redirect(url_for('auth.settings'))
+            
+        if not allowed_file(file.filename):
+            flash('Invalid file type. Please upload a PNG, JPG, or JPEG file.', 'error')
+            return redirect(url_for('auth.settings'))
+            
+        # Get a fresh user object from the database using UUID
+        user = User.query.get(current_user.id)
+        if not user:
+            flash('User not found.', 'error')
+            return redirect(url_for('auth.settings'))
+            
+        # Delete old profile picture if it exists
+        if user.profile_picture and user.profile_picture != 'default.png':
+            try:
+                old_picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], user.profile_picture)
+                if os.path.exists(old_picture_path):
+                    os.remove(old_picture_path)
+            except Exception as e:
+                print(f"Error deleting old profile picture: {str(e)}")
+                
+        # Save new profile picture
+        filename = secure_filename(file.filename)
+        # Add timestamp to filename to prevent caching issues
+        filename = f"{int(time.time())}_{filename}"
+        file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+        
+        user.profile_picture = filename
+        db.session.commit()
+        # Refresh the user session
+        login_user(user)
+        
+        flash('Profile picture updated successfully.', 'success')
+    except Exception as e:
+        print(f"Error updating profile picture: {str(e)}")
+        db.session.rollback()
+        flash('An error occurred while updating profile picture.', 'error')
+        
     return redirect(url_for('auth.settings'))
