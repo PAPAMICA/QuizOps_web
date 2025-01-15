@@ -18,17 +18,19 @@ class Config:
 
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_size': 100,
-        'pool_timeout': 300,
-        'pool_recycle': 3600,
-        'max_overflow': 200,
+        'max_overflow': 50,
+        'pool_timeout': 30,
+        'pool_recycle': 300,
         'pool_pre_ping': True,
+        'pool_use_lifo': True,
+        'echo_pool': True,
         'connect_args': {
-            'connect_timeout': 30,
+            'connect_timeout': 10,
             'application_name': 'quizops',
             'keepalives': 1,
-            'keepalives_idle': 60,
-            'keepalives_interval': 20,
-            'keepalives_count': 10,
-            'options': '-c statement_timeout=60000'
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5,
+            'options': '-c statement_timeout=30000'
         }
     }

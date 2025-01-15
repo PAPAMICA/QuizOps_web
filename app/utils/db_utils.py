@@ -6,8 +6,8 @@ import time
 
 @contextmanager
 def session_manager():
-    """Gestionnaire de contexte pour les sessions DB avec fermeture explicite"""
-    session = db.session
+    """Gestionnaire de contexte optimisé pour les sessions DB"""
+    session = db.session()  # Créer une nouvelle session
     try:
         yield session
         session.commit()
@@ -16,7 +16,9 @@ def session_manager():
         raise
     finally:
         session.close()
-        db.engine.dispose()  # Force la fermeture de toutes les connexions du pool
+        if not session.bind.pool.checkedin() > session.bind.pool.size * 0.9:
+            # Si plus de 90% des connexions sont utilisées, forcer le nettoyage
+            db.engine.dispose()
 
 def retry_on_db_lock(max_retries=3, delay=0.1):
     def decorator(f):
