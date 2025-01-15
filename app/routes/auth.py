@@ -1,11 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models.user import User, QuizResult, Category
+from app.models.user import User, QuizResult
 from app import db, mail
 from urllib.parse import urlparse
 from werkzeug.security import check_password_hash
 from app.forms import LoginForm, RegistrationForm
 from flask_mail import Message
+import os
+import yaml
 
 bp = Blueprint('auth', __name__)
 
@@ -288,8 +290,24 @@ def profile(user_id):
         'activity': {}
     }
 
-    # Get all categories
-    categories = {cat.name: cat for cat in Category.query.all()}
+    # Load categories from quiz directory
+    quiz_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'QuizOps_quiz')
+    categories = {}
+    for category in os.listdir(quiz_dir):
+        category_path = os.path.join(quiz_dir, category)
+        if not os.path.isdir(category_path):
+            continue
+
+        config_path = os.path.join(category_path, 'config.yml')
+        if os.path.isfile(config_path):
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f) or {}
+                categories[category] = {
+                    'name': config.get('name', category.replace('_', ' ').title()),
+                    'description': config.get('description', ''),
+                    'logo': config.get('logo', ''),
+                    'color': config.get('color', 'gray')
+                }
 
     # Calculate category statistics
     category_stats = {}
