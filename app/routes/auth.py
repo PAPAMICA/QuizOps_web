@@ -287,15 +287,17 @@ def settings():
         print(f"Form data: {request.form}")
 
         try:
+            # Get a fresh user object from the database
+            user = User.query.get(current_user.id)
+            
             if action == 'update_email':
                 email = request.form.get('email')
                 print(f"New email: {email}")
-                if email != current_user.email:
+                if email != user.email:
                     if User.query.filter_by(email=email).first():
                         flash('Email already registered.', 'error')
                         return redirect(url_for('auth.settings'))
-                    current_user.email = email
-                    db.session.add(current_user)
+                    user.email = email
                     db.session.commit()
                     flash('Email updated successfully.', 'success')
 
@@ -303,11 +305,10 @@ def settings():
                 current_password = request.form.get('current_password')
                 new_password = request.form.get('new_password')
 
-                if not current_user.check_password(current_password):
+                if not user.check_password(current_password):
                     flash('Current password is incorrect.', 'error')
                 else:
-                    current_user.set_password(new_password)
-                    db.session.add(current_user)
+                    user.set_password(new_password)
                     db.session.commit()
                     flash('Password updated successfully.', 'success')
 
@@ -325,18 +326,17 @@ def settings():
                     return redirect(url_for('auth.settings'))
                     
                 # Check if username is already taken
-                if new_username != current_user.username:
+                if new_username != user.username:
                     existing_user = User.query.filter_by(username=new_username).first()
                     if existing_user:
                         flash('Username is already taken.', 'error')
                         return redirect(url_for('auth.settings'))
                     
                     # Update username
-                    current_user.username = new_username
-                    db.session.add(current_user)
+                    user.username = new_username
                     db.session.commit()
                     flash('Username updated successfully.', 'success')
-                    print(f"Username updated to: {current_user.username}")
+                    print(f"Username updated to: {user.username}")
 
         except Exception as e:
             print(f"\n==== ERROR ====")
@@ -450,8 +450,9 @@ def update_profile_privacy():
         private_profile = 'private_profile' in request.form
         print(f"Setting private_profile to: {private_profile}")
         
-        current_user.private_profile = private_profile
-        db.session.add(current_user)
+        # Get a fresh user object from the database
+        user = User.query.get(current_user.id)
+        user.private_profile = private_profile
         db.session.commit()
         
         print("Privacy settings updated successfully")
@@ -491,19 +492,21 @@ def update_social_media():
         if twitter.startswith('@'):
             twitter = twitter[1:]
             
-        # Update user object
-        current_user.twitter_username = twitter or None
-        current_user.bluesky_handle = bluesky or None
-        current_user.linkedin_url = linkedin or None
-        current_user.website_url = website or None
-        current_user.github_username = github or None
-        current_user.gitlab_username = gitlab or None
-        current_user.dockerhub_username = dockerhub or None
-        current_user.stackoverflow_url = stackoverflow or None
-        current_user.medium_username = medium or None
-        current_user.dev_to_username = dev_to or None
+        # Get a fresh user object from the database
+        user = User.query.get(current_user.id)
         
-        db.session.add(current_user)
+        # Update user object
+        user.twitter_username = twitter or None
+        user.bluesky_handle = bluesky or None
+        user.linkedin_url = linkedin or None
+        user.website_url = website or None
+        user.github_username = github or None
+        user.gitlab_username = gitlab or None
+        user.dockerhub_username = dockerhub or None
+        user.stackoverflow_url = stackoverflow or None
+        user.medium_username = medium or None
+        user.dev_to_username = dev_to or None
+        
         db.session.commit()
         flash('Social media links updated successfully.', 'success')
     except Exception as e:
