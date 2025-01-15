@@ -6,21 +6,17 @@ import time
 
 @contextmanager
 def session_manager():
-    """Gestionnaire de contexte pour les sessions DB"""
+    """Gestionnaire de contexte pour les sessions DB avec fermeture explicite"""
+    session = db.session
     try:
-        yield db.session
-        db.session.commit()
-    except (TimeoutError, OperationalError) as e:
-        current_app.logger.error(f"Database connection error: {e}")
-        db.session.rollback()
-        db.session.remove()
-        raise
+        yield session
+        session.commit()
     except Exception as e:
-        current_app.logger.error(f"Database error: {e}")
-        db.session.rollback()
+        session.rollback()
         raise
     finally:
-        db.session.remove()
+        session.close()
+        db.engine.dispose()  # Force la fermeture de toutes les connexions du pool
 
 def retry_on_db_lock(max_retries=3, delay=0.1):
     def decorator(f):
@@ -29,13 +25,12 @@ def retry_on_db_lock(max_retries=3, delay=0.1):
             last_error = None
             for attempt in range(max_retries):
                 try:
-                    with session_manager():
+                    with session_manager() as session:
                         return f(*args, **kwargs)
                 except (TimeoutError, OperationalError) as e:
                     last_error = e
                     if attempt < max_retries - 1:
-                        time.sleep(delay * (2 ** attempt))  # exponential backoff
-                        db.session.remove()  # Force la libération de la session
+                        time.sleep(delay * (2 ** attempt))
                         continue
                     raise last_error
             raise last_error

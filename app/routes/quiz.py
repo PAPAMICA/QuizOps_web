@@ -271,8 +271,8 @@ def show_results(quiz_id):
 
     score_percentage = round((correct_answers / total_questions) * 100)
 
-    with session_manager():
-        try:
+    try:
+        with session_manager() as session:
             quiz_result = QuizResult(
                 user_id=current_user.id,
                 quiz_id=quiz_id,
@@ -284,10 +284,13 @@ def show_results(quiz_id):
                 time_spent=0,
                 quiz_title=quiz.get('title', quiz_id) if not quiz_id.startswith('custom_') else f"Custom Quiz - {quiz.get('category', '')} ({quiz.get('level', '')})"
             )
-            db.session.add(quiz_result)
-        except Exception as e:
-            current_app.logger.error(f"Error saving quiz result: {e}")
-            raise
+            session.add(quiz_result)
+            session.commit()
+    except Exception as e:
+        current_app.logger.error(f"Error saving quiz result: {e}")
+        raise
+    finally:
+        db.session.remove()  # Force la libération de la session
 
     # Nettoyer la session
     session.pop('current_quiz', None)

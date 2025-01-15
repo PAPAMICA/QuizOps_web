@@ -17,10 +17,10 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
 
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 50,
-        'pool_timeout': 120,
-        'pool_recycle': 1800,
-        'max_overflow': 25,
+        'pool_size': 100,
+        'pool_timeout': 300,
+        'pool_recycle': 3600,
+        'max_overflow': 200,
         'pool_pre_ping': True,
         'connect_args': {
             'connect_timeout': 30,

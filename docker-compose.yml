@@ -53,11 +53,11 @@ services:
       - "-c"
       - "effective_cache_size=1GB"
       - "-c"
-      - "max_worker_processes=8"
+      - "max_worker_processes=64"
       - "-c"
-      - "max_parallel_workers=8"
+      - "max_parallel_workers=64"
       - "-c"
-      - "max_parallel_workers_per_gather=4"
+      - "max_parallel_workers_per_gather=64"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     networks:
