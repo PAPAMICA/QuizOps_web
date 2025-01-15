@@ -359,13 +359,22 @@ def profile(username):
 @login_required
 def update_profile_privacy():
     try:
+        print(f"Updating privacy settings for user {current_user.username}")
         private_profile = 'private_profile' in request.form
-        current_user.private_profile = private_profile
+        print(f"Setting private_profile to: {private_profile}")
+        
+        # Update directly in the database
+        db.session.execute(
+            "UPDATE \"user\" SET private_profile = :private_profile WHERE id = :user_id",
+            {"private_profile": private_profile, "user_id": current_user.id}
+        )
         db.session.commit()
+        
+        print("Privacy settings updated successfully")
         flash('Privacy settings updated successfully.', 'success')
     except Exception as e:
+        print(f"Error updating privacy settings: {str(e)}")
         db.session.rollback()
         flash('An error occurred while updating privacy settings.', 'error')
-        print(f"Error updating privacy settings: {str(e)}")
     
     return redirect(url_for('auth.settings'))
