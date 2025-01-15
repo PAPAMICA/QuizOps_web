@@ -79,8 +79,16 @@ def delete_user(user_id):
     if user == current_user:
         flash('You cannot delete your own account.', 'error')
     else:
-        username = user.username
-        db.session.delete(user)
-        db.session.commit()
-        flash(f'User {username} has been deleted.', 'success')
+        try:
+            username = user.username
+            # First, delete all quiz results for this user
+            QuizResult.query.filter_by(user_id=user_id).delete()
+            # Then delete the user
+            User.query.filter_by(id=user_id).delete()
+            db.session.commit()
+            flash(f'User {username} has been deleted.', 'success')
+        except Exception as e:
+            print(f"Error deleting user: {str(e)}")
+            db.session.rollback()
+            flash('An error occurred while deleting the user.', 'error')
     return redirect(url_for('admin.users')) 
