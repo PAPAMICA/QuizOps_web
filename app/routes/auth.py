@@ -269,7 +269,8 @@ def profile(user_id):
     
     # If profile is private and current user is not the owner, show private message
     if user.private_profile and (not current_user.is_authenticated or current_user.id != user.id):
-        return render_template('auth/profile.html', user=user)
+        flash('This profile is private.', 'error')
+        return redirect(url_for('main.index'))
 
     # Get quiz results for the user
     quiz_results = (QuizResult.query

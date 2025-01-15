@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, current_app, g
+from flask import Blueprint, render_template, current_app, g, request
 from flask_login import current_user, login_required
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, text, case
 from app.models import User, QuizResult
 from app import db
 import os
@@ -140,51 +140,53 @@ def profile(username):
 @bp.route('/leaderboard')
 @login_required
 def leaderboard():
-    # Most active users (most quizzes taken)
-    most_active = db.session.query(
+    # Get time filter
+    time_filter = request.args.get('time', 'all')
+    category = request.args.get('category', 'all')
+    
+    # Base query
+    base_query = db.session.query(
         User,
-        func.count(QuizResult.id).label('quiz_count')
-    ).join(QuizResult).filter(
-        User.private_profile == False
-    ).group_by(User).order_by(
-        desc('quiz_count')
-    ).limit(10).all()
+        func.count(QuizResult.id).label('total_quizzes'),
+        func.avg(QuizResult.score * 100.0 / QuizResult.max_score).label('avg_score'),
+        func.sum(case((QuizResult.score == QuizResult.max_score, 1), else_=0)).label('perfect_scores')
+    ).join(QuizResult)
 
-    # Best average score
-    best_average = db.session.query(
-        User,
-        func.avg(
-            (func.cast(QuizResult.score, db.Float) / 
-             func.cast(QuizResult.max_score, db.Float) * 100)
-        ).label('average_score')
-    ).join(QuizResult).filter(
-        User.private_profile == False
-    ).group_by(User).having(
-        func.count(QuizResult.id) >= 5  # Minimum 5 quizzes to be ranked
-    ).order_by(
-        desc('average_score')
-    ).limit(10).all()
+    # Apply time filter
+    if time_filter != 'all':
+        if time_filter == '7days':
+            date_limit = datetime.utcnow() - timedelta(days=7)
+        elif time_filter == '30days':
+            date_limit = datetime.utcnow() - timedelta(days=30)
+        base_query = base_query.filter(QuizResult.completed_at >= date_limit)
 
-    # Most perfect scores (100%)
-    most_perfect = db.session.query(
-        User,
-        func.count(QuizResult.id).label('perfect_count')
-    ).join(QuizResult).filter(
-        User.private_profile == False,
-        QuizResult.score == QuizResult.max_score
-    ).group_by(User).order_by(
-        desc('perfect_count')
-    ).limit(10).all()
+    # Apply category filter
+    if category != 'all':
+        base_query = base_query.filter(QuizResult.category == category)
 
-    # Format the data for the template
-    most_active_data = [{'username': user.username, 'quiz_count': count} 
-                       for user, count in most_active]
-    best_average_data = [{'username': user.username, 'average_score': float(avg)} 
-                        for user, avg in best_average]
-    most_perfect_data = [{'username': user.username, 'perfect_count': count} 
-                        for user, count in most_perfect]
+    # Group and filter private profiles
+    base_query = base_query.group_by(User).filter(User.private_profile == False)
+
+    # Get top users by perfect scores
+    perfect_scores = base_query.order_by(text('perfect_scores DESC')).limit(10).all()
+
+    # Get most active users
+    most_active = base_query.order_by(text('total_quizzes DESC')).limit(10).all()
+
+    # Get users with best average scores (minimum 5 quizzes)
+    best_average = base_query.having(func.count(QuizResult.id) >= 5).order_by(text('avg_score DESC')).limit(10).all()
+
+    # Get categories for filter
+    quiz_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'QuizOps_quiz')
+    categories = []
+    for cat in os.listdir(quiz_dir):
+        if os.path.isdir(os.path.join(quiz_dir, cat)) and not cat.startswith('.'):
+            categories.append(cat)
 
     return render_template('leaderboard.html',
-                         most_active=most_active_data,
-                         best_average=best_average_data,
-                         most_perfect=most_perfect_data)
+                         perfect_scores=perfect_scores,
+                         most_active=most_active,
+                         best_average=best_average,
+                         categories=sorted(categories),
+                         selected_time=time_filter,
+                         selected_category=category)

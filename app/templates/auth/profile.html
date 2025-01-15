@@ -4,19 +4,68 @@
 <div class="container mx-auto px-4 py-8">
     <!-- En-tête du profil -->
     <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
-        <div class="flex items-center space-x-4">
-            <div class="h-20 w-20 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30">
-                <i class="fas fa-user text-3xl text-indigo-400"></i>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="h-20 w-20 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30">
+                    <i class="fas fa-user text-3xl text-indigo-400"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-100">{{ user.username }}</h1>
+                    {% if user.is_admin %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-400">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Admin
+                    </span>
+                    {% endif %}
+                    <p class="text-gray-400 mt-1">Member since {{ user.created_at.strftime('%B %Y') }}</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-3xl font-bold text-gray-100">{{ user.username }}</h1>
-                {% if user.is_admin %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-400">
-                    <i class="fas fa-shield-alt mr-1"></i>
-                    Admin
-                </span>
-                {% endif %}
-                <p class="text-gray-400 mt-1">Member since {{ user.created_at.strftime('%B %Y') }}</p>
+            {% if current_user.id == user.id %}
+            <button onclick="openShareModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-150 inline-flex items-center">
+                <i class="fas fa-share-alt mr-2"></i>
+                Share my profile
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal de partage -->
+    <div id="shareModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-200">Share Your Profile</h3>
+                <button onclick="closeShareModal()" class="text-gray-400 hover:text-gray-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm text-gray-400 mb-2 block">Your Profile URL</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" value="{{ url_for('auth.profile', user_id=user.id, _external=True) }}" 
+                               id="profile-url" readonly
+                               class="flex-1 bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                        <button onclick="copyProfileUrl()" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-150">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col space-y-2">
+                    <a href="https://twitter.com/intent/tweet?url={{ url_for('auth.profile', user_id=user.id, _external=True) | urlencode }}&text=Check%20out%20my%20QuizOps%20profile!" 
+                       target="_blank"
+                       class="inline-flex items-center justify-center px-4 py-2 bg-[#1DA1F2] text-white rounded-md hover:bg-[#1a91da] transition-colors duration-150">
+                        <i class="fab fa-twitter mr-2"></i>
+                        Share on X
+                    </a>
+                    <a href="https://bsky.app/intent/compose?text=Check%20out%20my%20QuizOps%20profile!%20{{ url_for('auth.profile', user_id=user.id, _external=True) | urlencode }}" 
+                       target="_blank"
+                       class="inline-flex items-center justify-center px-4 py-2 bg-[#0085ff] text-white rounded-md hover:bg-[#0076e6] transition-colors duration-150">
+                        <i class="fas fa-cloud mr-2"></i>
+                        Share on Bluesky
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -345,6 +394,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+});
+
+function openShareModal() {
+    document.getElementById('shareModal').classList.remove('hidden');
+}
+
+function closeShareModal() {
+    document.getElementById('shareModal').classList.add('hidden');
+}
+
+function copyProfileUrl() {
+    const urlInput = document.getElementById('profile-url');
+    urlInput.select();
+    document.execCommand('copy');
+    
+    // Show a temporary tooltip or notification
+    const button = urlInput.nextElementSibling;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    setTimeout(() => {
+        button.innerHTML = originalText;
+    }, 2000);
+}
+
+// Close modal when clicking outside
+document.getElementById('shareModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeShareModal();
+    }
 });
 </script>
 {% endblock %} 
