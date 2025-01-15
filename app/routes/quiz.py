@@ -405,3 +405,191 @@ def create_custom_quiz():
         }
 
     return redirect(url_for('quiz.show_question', quiz_id=custom_quiz['id'], question_number=1))
+
+@bp.route('/demo')
+@set_locale
+def demo_quiz():
+    """Start a demo quiz without login"""
+    # List of available demo quizzes
+    demo_categories = ['ansible', 'docker', 'git', 'aws']
+    demo_quizzes = []
+    
+    # Get all intermediate quizzes from the selected categories
+    for category in demo_categories:
+        quizzes = current_app.quiz_manager.get_quizzes_by_category(category)
+        for quiz in quizzes:
+            if quiz['level'].lower() == 'intermediate':
+                demo_quizzes.append(quiz)
+    
+    if not demo_quizzes:
+        flash('No demo quizzes available at the moment.', 'error')
+        return redirect(url_for('main.index'))
+    
+    # Select a random quiz
+    quiz = random.choice(demo_quizzes)
+    quiz_id = quiz['id']
+    
+    # Initialize the session
+    session['current_quiz'] = quiz_id
+    session['current_question'] = 0
+    session['answers'] = {}
+    session['is_demo'] = True
+    
+    # Shuffle questions
+    questions = quiz['questions'].copy()
+    random.shuffle(questions)
+    
+    # Save questions order
+    session['questions_order'] = [q['id'] for q in questions]
+    
+    # Shuffle options for each question
+    session['shuffled_options'] = {}
+    for i, question in enumerate(questions, 1):
+        original_indices = list(range(len(question['options'])))
+        shuffled_indices = original_indices.copy()
+        random.shuffle(shuffled_indices)
+        
+        original_to_shuffled = {str(old_idx): str(new_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
+        shuffled_to_original = {str(new_idx): str(old_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
+        
+        session['shuffled_options'][str(i)] = {
+            'shuffled_to_original': shuffled_to_original,
+            'original_to_shuffled': original_to_shuffled
+        }
+    
+    # Save shuffled questions
+    session['questions'] = questions
+    
+    return redirect(url_for('quiz.show_demo_question', quiz_id=quiz_id, question_number=1))
+
+@bp.route('/demo/<quiz_id>/question/<int:question_number>')
+@set_locale
+def show_demo_question(quiz_id, question_number):
+    """Show a question from the demo quiz"""
+    if session.get('current_quiz') != quiz_id or not session.get('is_demo'):
+        return redirect(url_for('quiz.demo_quiz'))
+    
+    quiz = current_app.quiz_manager.get_quiz(quiz_id)
+    if not quiz or question_number < 1 or question_number > len(quiz['questions']):
+        return render_template('404.html'), 404
+    
+    # Get question in shuffled order
+    questions = session.get('questions', [])
+    question = questions[question_number - 1].copy()
+    mappings = session['shuffled_options'][str(question_number)]
+    
+    # Reorganize options
+    options = [''] * len(question['options'])
+    for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
+        new_idx = int(new_idx_str)
+        old_idx = int(old_idx_str)
+        options[new_idx] = question['options'][old_idx]
+    
+    question['options'] = options
+    
+    # Update correct answer index
+    original_correct = question['correct_answer']
+    question['correct_answer'] = int(mappings['original_to_shuffled'][str(original_correct)])
+    
+    return render_template('quiz/question.html',
+                         quiz=quiz,
+                         question=question,
+                         question_number=question_number,
+                         total_questions=len(quiz['questions']),
+                         is_demo=True)
+
+@bp.route('/demo/<quiz_id>/question/<int:question_number>/answer', methods=['POST'])
+@set_locale
+def answer_demo_question(quiz_id, question_number):
+    """Handle answer for demo quiz"""
+    if session.get('current_quiz') != quiz_id or not session.get('is_demo'):
+        return redirect(url_for('quiz.demo_quiz'))
+    
+    quiz = current_app.quiz_manager.get_quiz(quiz_id)
+    if not quiz or question_number < 1 or question_number > len(quiz['questions']):
+        return render_template('404.html'), 404
+    
+    # Get answer
+    answer = request.form.get('answer')
+    if answer is not None:
+        answer = int(answer)
+        mappings = session['shuffled_options'][str(question_number)]
+        original_answer = int(mappings['shuffled_to_original'][str(answer)])
+        
+        if 'answers' not in session:
+            session['answers'] = {}
+        
+        answers = dict(session['answers'])
+        answers[str(question_number)] = answer
+        session['answers'] = answers
+    
+    if question_number < len(quiz['questions']):
+        return redirect(url_for('quiz.show_demo_question',
+                              quiz_id=quiz_id,
+                              question_number=question_number + 1))
+    else:
+        return redirect(url_for('quiz.show_demo_results', quiz_id=quiz_id))
+
+@bp.route('/demo/<quiz_id>/results')
+@set_locale
+def show_demo_results(quiz_id):
+    """Show results for demo quiz"""
+    if session.get('current_quiz') != quiz_id or not session.get('is_demo'):
+        return redirect(url_for('quiz.demo_quiz'))
+    
+    quiz = current_app.quiz_manager.get_quiz(quiz_id)
+    if not quiz:
+        return render_template('404.html'), 404
+    
+    answers = session.get('answers', {})
+    if not answers:
+        return redirect(url_for('quiz.demo_quiz'))
+    
+    questions = session.get('questions', [])
+    
+    correct_answers = 0
+    total_questions = len(questions)
+    questions_with_answers = []
+    
+    for i, question in enumerate(questions, 1):
+        q = question.copy()
+        mappings = session['shuffled_options'][str(i)]
+        
+        options = [''] * len(question['options'])
+        for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
+            new_idx = int(new_idx_str)
+            old_idx = int(old_idx_str)
+            options[new_idx] = question['options'][old_idx]
+        
+        q['options'] = options
+        user_answer = answers.get(str(i))
+        
+        is_correct = False
+        if user_answer is not None:
+            original_user_answer = int(mappings['shuffled_to_original'][str(user_answer)])
+            is_correct = original_user_answer == question['correct_answer']
+            if is_correct:
+                correct_answers += 1
+        
+        questions_with_answers.append({
+            'question': q,
+            'user_answer': user_answer,
+            'is_correct': is_correct
+        })
+    
+    score_percentage = round((correct_answers / total_questions) * 100)
+    
+    # Clear demo session
+    session.pop('is_demo', None)
+    session.pop('current_quiz', None)
+    session.pop('questions', None)
+    session.pop('answers', None)
+    session.pop('shuffled_options', None)
+    
+    return render_template('quiz/results.html',
+                         quiz=quiz,
+                         questions=questions_with_answers,
+                         score_percentage=score_percentage,
+                         correct_answers=correct_answers,
+                         total_questions=total_questions,
+                         is_demo=True)

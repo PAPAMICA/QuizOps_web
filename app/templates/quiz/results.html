@@ -106,6 +106,18 @@
         <!-- Actions -->
         <div class="px-4 py-4 sm:px-6 bg-gray-700 border-t border-gray-700">
             <div class="flex justify-between">
+                {% if is_demo %}
+                <a href="{{ url_for('auth.register') }}"
+                   class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Create an account to access 100+ quizzes on 30+ technologies
+                </a>
+                <a href="https://quizops.net/profile/PAPAMICA"
+                   class="inline-flex items-center px-6 py-3 border border-gray-600 shadow-sm text-base font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    View example statistics
+                </a>
+                {% else %}
                 <a href="{{ url_for('quiz.list_quizzes') }}"
                    class="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600">
                     <i class="fas fa-list mr-2"></i>
@@ -118,6 +130,7 @@
                         Try Again
                     </button>
                 </form>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -28,7 +28,7 @@
                 </span>
                 <div class="w-2/3 bg-gray-600 rounded-full h-2.5 overflow-hidden">
                     {% set progress = (question_number / total_questions * 100) | round %}
-                    <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: {{ progress }}%"></div>
+                    <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" data-progress="{{ progress }}" style="width: {{ progress }}%"></div>
                 </div>
             </div>
             <!-- Timer -->
@@ -53,7 +53,7 @@
                     </h2>
 
                     <!-- Options -->
-                    <form id="question-form" action="{{ url_for('quiz.answer_question', quiz_id=quiz.id, question_number=question_number) }}" method="post" class="space-y-3">
+                    <form id="question-form" action="{% if is_demo %}{{ url_for('quiz.answer_demo_question', quiz_id=quiz.id, question_number=question_number) }}{% else %}{{ url_for('quiz.answer_question', quiz_id=quiz.id, question_number=question_number) }}{% endif %}" method="post" class="space-y-3">
                         {% for option in question.options %}
                         <label class="flex items-center p-4 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors duration-150 group">
                             <input type="radio" name="answer" value="{{ loop.index0 }}" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 bg-gray-700">
@@ -131,4 +131,10 @@ function startTimer() {
 // Start the timer when the page loads
 document.addEventListener('DOMContentLoaded', startTimer);
 </script>
+
+<style>
+.progress-bar {
+    width: var(--progress-width);
+}
+</style>
 {% endblock %}
