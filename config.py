@@ -17,17 +17,18 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
 
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 10,
-        'pool_timeout': 30,
-        'pool_recycle': 300,
-        'max_overflow': 2,
+        'pool_size': 50,
+        'pool_timeout': 120,
+        'pool_recycle': 1800,
+        'max_overflow': 25,
         'pool_pre_ping': True,
         'connect_args': {
-            'connect_timeout': 10,
+            'connect_timeout': 30,
             'application_name': 'quizops',
             'keepalives': 1,
-            'keepalives_idle': 30,
-            'keepalives_interval': 10,
-            'keepalives_count': 5
+            'keepalives_idle': 60,
+            'keepalives_interval': 20,
+            'keepalives_count': 10,
+            'options': '-c statement_timeout=60000'
         }
     }
