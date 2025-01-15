@@ -176,12 +176,9 @@ def leaderboard():
     # Get users with best average scores (minimum 5 quizzes)
     best_average = base_query.having(func.count(QuizResult.id) >= 5).order_by(text('avg_score DESC')).limit(10).all()
 
-    # Get categories for filter
-    quiz_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'QuizOps_quiz')
-    categories = []
-    for cat in os.listdir(quiz_dir):
-        if os.path.isdir(os.path.join(quiz_dir, cat)) and not cat.startswith('.'):
-            categories.append(cat)
+    # Get categories from quiz results
+    categories = db.session.query(QuizResult.category).distinct().all()
+    categories = [cat[0] for cat in categories]
 
     return render_template('leaderboard.html',
                          perfect_scores=perfect_scores,

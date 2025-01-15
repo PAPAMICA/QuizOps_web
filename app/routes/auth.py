@@ -263,9 +263,9 @@ def settings():
 
     return render_template('auth/settings.html')
 
-@bp.route('/profile/<int:user_id>')
-def profile(user_id):
-    user = User.query.get_or_404(user_id)
+@bp.route('/profile/<username>')
+def profile(username):
+    user = User.query.filter_by(username=username).first_or_404()
     
     # If profile is private and current user is not the owner, show private message
     if user.private_profile and (not current_user.is_authenticated or current_user.id != user.id):
@@ -355,6 +355,11 @@ def profile(user_id):
 def update_profile_privacy():
     private_profile = request.form.get('private_profile') == 'on'
     current_user.private_profile = private_profile
-    db.session.commit()
-    flash('Privacy settings updated successfully.', 'success')
+    try:
+        db.session.commit()
+        flash('Privacy settings updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while updating privacy settings.', 'error')
+        print(f"Error updating privacy settings: {str(e)}")
     return redirect(url_for('auth.settings'))
