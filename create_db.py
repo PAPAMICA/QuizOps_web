@@ -14,21 +14,23 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@quizops-db:5432/quizops'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_size': 50,
-    'pool_timeout': 120,
-    'pool_recycle': 1800,
-    'max_overflow': 25,
+    'pool_size': 20,
+    'pool_timeout': 30,
+    'pool_recycle': 300,
+    'max_overflow': 10,
     'pool_pre_ping': True,
+    'pool_use_lifo': True,
+    'echo_pool': True,
     'connect_args': {
-            'connect_timeout': 30,
-            'application_name': 'quizops',
-            'keepalives': 1,
-            'keepalives_idle': 60,
-            'keepalives_interval': 20,
-            'keepalives_count': 10,
-            'options': '-c statement_timeout=60000'
-        }
+        'connect_timeout': 10,
+        'application_name': 'quizops',
+        'keepalives': 1,
+        'keepalives_idle': 30,
+        'keepalives_interval': 10,
+        'keepalives_count': 5,
+        'options': '-c statement_timeout=30000'
     }
+}
 
 # Initialize database
 db = SQLAlchemy(app)
@@ -46,6 +48,7 @@ class User(db.Model):
     verification_code = db.Column(db.String(6))
     verification_code_expires = db.Column(db.DateTime)
     is_admin = db.Column(db.Boolean, default=False)
+    private_profile = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -64,6 +67,14 @@ class QuizResult(db.Model):
     answers = db.Column(db.JSON)
     time_spent = db.Column(db.Integer)
 
+    @property
+    def percentage(self):
+        """Calcule le pourcentage de réussite"""
+        try:
+            return round((self.score / self.max_score) * 100, 1)
+        except (ZeroDivisionError, TypeError):
+            return 0.0
+
 class Quiz(db.Model):
     __tablename__ = 'quiz'
     id = db.Column(db.String(64), primary_key=True)
@@ -79,8 +90,9 @@ def create_admin_user():
     admin = User(
         username='admin',
         email='admin@quizops.local',
-        email_verified=True,  # L'admin est vérifié par défaut
-        is_admin=True
+        email_verified=True,
+        is_admin=True,
+        private_profile=False
     )
     admin.set_password('admin')  # À changer en production !
     db.session.add(admin)

@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
     verification_code = db.Column(db.String(6))
     verification_code_expires = db.Column(db.DateTime)
     is_admin = db.Column(db.Boolean, default=False)
+    private_profile = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

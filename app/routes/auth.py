@@ -260,3 +260,42 @@ def settings():
         return redirect(url_for('auth.settings'))
 
     return render_template('auth/settings.html')
+
+@bp.route('/profile/<username>')
+@login_required
+def profile(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    
+    # If profile is private and not the owner, show private message
+    if user.private_profile and current_user.id != user.id:
+        flash('This profile is private.', 'info')
+        return render_template('auth/profile.html', user=user)
+
+    # Get quiz results
+    quiz_results = QuizResult.query.filter_by(user_id=user.id).order_by(QuizResult.completed_at.desc()).all()
+    
+    # Calculate statistics
+    quiz_count = len(quiz_results)
+    perfect_scores = len([r for r in quiz_results if r.score == r.max_score])
+    
+    # Calculate average score
+    if quiz_results:
+        avg_score = sum(r.percentage for r in quiz_results) / len(quiz_results)
+    else:
+        avg_score = 0.0
+
+    return render_template('auth/profile.html',
+                         user=user,
+                         quiz_results=quiz_results,
+                         quiz_count=quiz_count,
+                         avg_score=avg_score,
+                         perfect_scores=perfect_scores)
+
+@bp.route('/profile/privacy/update', methods=['POST'])
+@login_required
+def update_profile_privacy():
+    private_profile = request.form.get('private_profile') == 'on'
+    current_user.private_profile = private_profile
+    db.session.commit()
+    flash('Privacy settings updated successfully.', 'success')
+    return redirect(url_for('auth.profile', username=current_user.username))

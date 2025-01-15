@@ -57,6 +57,11 @@
                             Custom Quiz
                         </a>
                         {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.leaderboard') }}" 
+                           class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
+                            <i class="fas fa-trophy mr-2"></i>
+                            Leaderboard
+                        </a>
                         <a href="{{ url_for('main.profile', username=current_user.username) }}" 
                            class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-indigo-400 transition-colors duration-150">
                             <i class="fas fa-chart-line mr-2"></i>
@@ -163,6 +168,10 @@
                         <i class="fas fa-magic mr-2"></i>Custom Quiz
                     </a>
                     {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.leaderboard') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
+                        <i class="fas fa-trophy mr-2"></i>Leaderboard
+                    </a>
                     <a href="{{ url_for('main.profile', username=current_user.username) }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700">
                         <i class="fas fa-chart-line mr-2"></i>My Stats

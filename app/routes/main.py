@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template
-from flask_login import current_user
-from app.models.user import QuizResult, User
+from flask import Blueprint, render_template, current_app, g
+from flask_login import current_user, login_required
+from sqlalchemy import func, desc
+from app.models import User, QuizResult
+from app import db
 import os
 import yaml
 from datetime import datetime, timedelta
@@ -134,3 +136,55 @@ def profile(username):
                          total_quizzes=total_quizzes,
                          avg_score=avg_score,
                          perfect_scores=perfect_scores)
+
+@bp.route('/leaderboard')
+@login_required
+def leaderboard():
+    # Most active users (most quizzes taken)
+    most_active = db.session.query(
+        User,
+        func.count(QuizResult.id).label('quiz_count')
+    ).join(QuizResult).filter(
+        User.private_profile == False
+    ).group_by(User).order_by(
+        desc('quiz_count')
+    ).limit(10).all()
+
+    # Best average score
+    best_average = db.session.query(
+        User,
+        func.avg(
+            (func.cast(QuizResult.score, db.Float) / 
+             func.cast(QuizResult.max_score, db.Float) * 100)
+        ).label('average_score')
+    ).join(QuizResult).filter(
+        User.private_profile == False
+    ).group_by(User).having(
+        func.count(QuizResult.id) >= 5  # Minimum 5 quizzes to be ranked
+    ).order_by(
+        desc('average_score')
+    ).limit(10).all()
+
+    # Most perfect scores (100%)
+    most_perfect = db.session.query(
+        User,
+        func.count(QuizResult.id).label('perfect_count')
+    ).join(QuizResult).filter(
+        User.private_profile == False,
+        QuizResult.score == QuizResult.max_score
+    ).group_by(User).order_by(
+        desc('perfect_count')
+    ).limit(10).all()
+
+    # Format the data for the template
+    most_active_data = [{'username': user.username, 'quiz_count': count} 
+                       for user, count in most_active]
+    best_average_data = [{'username': user.username, 'average_score': float(avg)} 
+                        for user, avg in best_average]
+    most_perfect_data = [{'username': user.username, 'perfect_count': count} 
+                        for user, count in most_perfect]
+
+    return render_template('leaderboard.html',
+                         most_active=most_active_data,
+                         best_average=best_average_data,
+                         most_perfect=most_perfect_data)
