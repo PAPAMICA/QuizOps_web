@@ -25,25 +25,35 @@
                     <span class="font-semibold text-indigo-400">{{ total_quizzes }}</span> quizzes available
                 </div>
                 {% if not current_user.is_authenticated %}
-                <div class="mt-10 flex space-x-4">
+                <div class="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <!-- Get Started -->
                     <a href="{{ url_for('auth.register') }}"
-                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
                         <i class="fas fa-user-plus mr-2"></i>
                         Get Started
                     </a>
+                    
+                    <!-- Sign In -->
                     <a href="{{ url_for('auth.login') }}"
-                        class="inline-flex items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-md text-gray-300 bg-gray-800/50 hover:bg-gray-800">
+                        class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-lg text-gray-300 bg-gray-800/50 hover:bg-gray-800 transition-colors duration-200">
                         <i class="fas fa-sign-in-alt mr-2"></i>
                         Sign In
                     </a>
+                    
+                    <!-- Try Demo Quiz -->
                     <a href="{{ url_for('quiz.demo_quiz') }}"
-                        class="inline-flex items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-md text-gray-300 bg-gray-800/50 hover:bg-gray-800 relative group overflow-hidden">
-                        <span class="relative z-10 flex items-center">
+                        class="demo-button w-full sm:w-auto flex justify-center items-center px-6 py-3 text-base font-medium rounded-lg relative group">
+                        <!-- Bordure animée -->
+                        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg animate-border"></div>
+                        <!-- Fond avec effet de glassmorphism -->
+                        <div class="absolute inset-[1px] bg-gray-900/90 rounded-lg backdrop-blur-xl"></div>
+                        <!-- Contenu -->
+                        <span class="relative z-10 flex items-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-indigo-100 group-hover:from-indigo-100 group-hover:to-white transition-all duration-300">
                             <i class="fas fa-play mr-2"></i>
                             Try a Demo Quiz
                         </span>
-                        <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-                        <div class="absolute -inset-full w-[400%] animate-[shimmer_4s_linear_infinite] bg-gradient-to-r via-indigo-500/30 from-transparent to-transparent"></div>
+                        <!-- Effet de brillance au hover -->
+                        <div class="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"></div>
                     </a>
                 </div>
                 {% endif %}
@@ -124,12 +134,12 @@
 
 @keyframes pulse-glow {
     0%, 100% {
-        opacity: 1;
+        opacity: 0.8;
         transform: scale(1);
     }
     50% {
-        opacity: 0.8;
-        transform: scale(1.05);
+        opacity: 1;
+        transform: scale(1.02);
     }
 }
 
@@ -138,12 +148,43 @@
 }
 
 @keyframes shimmer {
-    from {
+    0% {
         transform: translateX(-100%);
     }
-    to {
+    100% {
         transform: translateX(100%);
     }
+}
+
+@keyframes border-animation {
+    0%, 100% {
+        background-size: 200% 200%;
+        background-position: 0% 50%;
+    }
+    50% {
+        background-size: 200% 200%;
+        background-position: 100% 50%;
+    }
+}
+
+.animate-border {
+    animation: border-animation 3s ease infinite;
+}
+
+.demo-button::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.demo-button:hover::after {
+    opacity: 1;
+    animation: pulse-glow 2s ease-in-out infinite;
 }
 </style>
 {% endblock %} 
