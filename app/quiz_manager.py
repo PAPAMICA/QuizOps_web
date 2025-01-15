@@ -156,7 +156,8 @@ class QuizManager:
                     'description': quiz_data.get('description', ''),
                     'category': category,
                     'level': quiz_data.get('level', 'beginner'),
-                    'is_custom': False
+                    'is_custom': False,
+                    'questions': quiz_data.get('questions', [])
                 })
         
         # Trier les quiz d'abord par niveau puis par titre
