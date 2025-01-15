@@ -3,11 +3,12 @@ from sqlalchemy.exc import SQLAlchemyError, TimeoutError, OperationalError
 from flask import current_app
 from app import db
 import time
+from functools import wraps
 
 @contextmanager
 def session_manager():
-    """Gestionnaire de contexte optimisé pour les sessions DB"""
-    session = db.session()  # Créer une nouvelle session
+    """Optimized context manager for DB sessions"""
+    session = db.session()  # Create a new session
     try:
         yield session
         session.commit()
@@ -16,9 +17,11 @@ def session_manager():
         raise
     finally:
         session.close()
-        # Vérifier le nombre de connexions actives
-        if session.bind.pool._checked_out >= session.bind.pool.size * 0.9:
-            # Si plus de 90% des connexions sont utilisées, forcer le nettoyage
+        # Check the number of active connections
+        checkedin = session.bind.pool.checkedin()
+        pool_size = session.bind.pool.size()
+        if checkedin >= int(pool_size * 0.9):
+            # If more than 90% of connections are used, force cleanup
             db.engine.dispose()
 
 def retry_on_db_lock(max_retries=3, delay=0.1):
@@ -38,4 +41,4 @@ def retry_on_db_lock(max_retries=3, delay=0.1):
                     raise last_error
             raise last_error
         return wrapper
-    return decorator 
+    return decorator
