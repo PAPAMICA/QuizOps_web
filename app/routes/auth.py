@@ -356,4 +356,4 @@ def update_profile_privacy():
     current_user.private_profile = private_profile
     db.session.commit()
     flash('Privacy settings updated successfully.', 'success')
-    return redirect(url_for('auth.profile', username=current_user.username))
+    return redirect(url_for('auth.settings'))

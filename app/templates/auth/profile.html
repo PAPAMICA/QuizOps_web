@@ -21,26 +21,6 @@
         </div>
     </div>
 
-    {% if current_user.id == user.id %}
-    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
-        <form method="POST" action="{{ url_for('auth.update_profile_privacy') }}">
-            <div class="flex items-center justify-between">
-                <div>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="private_profile" class="form-checkbox h-5 w-5 text-indigo-500 rounded border-gray-600 bg-gray-700 focus:ring-indigo-500" 
-                               {% if user.private_profile %}checked{% endif %}>
-                        <span class="ml-2 text-gray-300">Private Profile</span>
-                    </label>
-                    <p class="mt-1 text-sm text-gray-400">When enabled, your profile and statistics will be hidden from other users and the leaderboard.</p>
-                </div>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-150">
-                    Save Privacy Settings
-                </button>
-            </div>
-        </form>
-    </div>
-    {% endif %}
-
     {% if not user.private_profile or current_user.id == user.id %}
     <!-- Statistiques globales -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
