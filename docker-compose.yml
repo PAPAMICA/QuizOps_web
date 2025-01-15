@@ -39,6 +39,15 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: quizops
+      POSTGRES_MAX_CONNECTIONS: 200
+    command: 
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "work_mem=16MB"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     networks:

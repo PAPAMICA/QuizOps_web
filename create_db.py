@@ -14,12 +14,17 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@quizops-db:5432/quizops'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_size': 10,
-    'pool_timeout': 30,
+    'pool_size': 20,
+    'pool_timeout': 60,
     'pool_recycle': 1800,
-    'max_overflow': 2,
+    'max_overflow': 5,
+    'pool_pre_ping': True,
     'connect_args': {
-        'connect_timeout': 10
+        'connect_timeout': 10,
+        'keepalives': 1,
+        'keepalives_idle': 30,
+        'keepalives_interval': 10,
+        'keepalives_count': 5
     }
 }
 

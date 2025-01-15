@@ -15,3 +15,18 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
+
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 20,
+        'pool_timeout': 60,
+        'pool_recycle': 1800,
+        'max_overflow': 5,
+        'pool_pre_ping': True,
+        'connect_args': {
+            'connect_timeout': 10,
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5
+        }
+    }
