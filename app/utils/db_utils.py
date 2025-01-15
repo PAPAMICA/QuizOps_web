@@ -28,7 +28,7 @@ def session_manager():
             session.close()
             print(f"[DB] Session {session_id} closed")
             # Forcer la fin de la transaction
-            session.remove()
+            db.session.remove()
             db.engine.dispose()
             print(f"[DB] Connections disposed for session {session_id}")
 
