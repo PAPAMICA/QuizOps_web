@@ -626,16 +626,16 @@ def update_profile_picture():
             flash('Invalid file type. Please upload a PNG, JPG, or JPEG file.', 'error')
             return redirect(url_for('auth.settings'))
             
-        # Get a fresh user object from the database using UUID
-        user = User.query.get(current_user.id)
-        if not user:
-            flash('User not found.', 'error')
-            return redirect(url_for('auth.settings'))
+        # Get current profile picture
+        current_user_data = db.session.execute(
+            db.select(User.profile_picture)
+            .where(User.id == current_user.id)
+        ).scalar()
             
         # Delete old profile picture if it exists
-        if user.profile_picture and user.profile_picture != 'default.png':
+        if current_user_data and current_user_data != 'default.png':
             try:
-                old_picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], user.profile_picture)
+                old_picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], current_user_data)
                 if os.path.exists(old_picture_path):
                     os.remove(old_picture_path)
             except Exception as e:
@@ -647,10 +647,18 @@ def update_profile_picture():
         filename = f"{int(time.time())}_{filename}"
         file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
         
-        user.profile_picture = filename
+        # Update profile picture directly in database
+        db.session.execute(
+            db.update(User)
+            .where(User.id == current_user.id)
+            .values(profile_picture=filename)
+        )
         db.session.commit()
-        # Refresh the user session
-        login_user(user)
+        
+        # Get fresh user data and refresh session
+        user = User.query.get(current_user.id)
+        if user:
+            login_user(user)
         
         flash('Profile picture updated successfully.', 'success')
     except Exception as e:
