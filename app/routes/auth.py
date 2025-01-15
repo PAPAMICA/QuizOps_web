@@ -272,9 +272,10 @@ def profile(username):
         flash('This profile is private.', 'error')
         return redirect(url_for('main.index'))
 
-    # Get quiz results for the user
+    # Get quiz results for the user (excluding custom quizzes)
     quiz_results = (QuizResult.query
                    .filter_by(user_id=user.id)
+                   .filter(~QuizResult.category.like('custom%'))  # Exclude custom quizzes
                    .order_by(QuizResult.completed_at.desc())
                    .all())
 
@@ -296,7 +297,7 @@ def profile(username):
     categories = {}
     for category in os.listdir(quiz_dir):
         category_path = os.path.join(quiz_dir, category)
-        if not os.path.isdir(category_path):
+        if not os.path.isdir(category_path) or category.startswith('custom'):
             continue
 
         config_path = os.path.join(category_path, 'config.yml')
@@ -359,6 +360,7 @@ def update_profile_privacy():
         
         # Update user's privacy setting
         current_user.private_profile = private_profile
+        db.session.add(current_user)  # Ensure the instance is tracked
         db.session.commit()
         
         flash('Privacy settings updated successfully.', 'success')
