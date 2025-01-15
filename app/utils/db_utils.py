@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from sqlalchemy.exc import SQLAlchemyError, TimeoutError, OperationalError
-from flask import current_app
+from flask import current_app, request
 from app import db
 import time
 from functools import wraps
@@ -8,21 +8,24 @@ from functools import wraps
 @contextmanager
 def session_manager():
     """Optimized context manager for DB sessions"""
-    session = db.session()  # Create a new session
+    session = None
+    session_id = id(db.session())
+    print(f"[DB] Opening session {session_id} for route: {request.endpoint}")
     try:
+        session = db.session()
         yield session
         session.commit()
+        print(f"[DB] Session {session_id} committed successfully")
     except Exception as e:
-        session.rollback()
+        if session:
+            session.rollback()
+            print(f"[DB] Session {session_id} rolled back due to error: {str(e)}")
         raise
     finally:
-        session.close()
-        # Check the number of active connections
-        checkedin = session.bind.pool.checkedin()
-        pool_size = session.bind.pool.size()
-        if checkedin >= int(pool_size * 0.9):
-            # If more than 90% of connections are used, force cleanup
+        if session:
+            session.close()
             db.engine.dispose()
+            print(f"[DB] Session {session_id} closed and connections disposed")
 
 def retry_on_db_lock(max_retries=3, delay=0.1):
     def decorator(f):
@@ -31,8 +34,7 @@ def retry_on_db_lock(max_retries=3, delay=0.1):
             last_error = None
             for attempt in range(max_retries):
                 try:
-                    with session_manager() as session:
-                        return f(*args, **kwargs)
+                    return f(*args, **kwargs)
                 except (TimeoutError, OperationalError) as e:
                     last_error = e
                     if attempt < max_retries - 1:
