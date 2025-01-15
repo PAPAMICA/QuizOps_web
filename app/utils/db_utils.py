@@ -13,19 +13,24 @@ def session_manager():
     print(f"[DB] Opening session {session_id} for route: {request.endpoint}")
     try:
         session = db.session()
+        session.begin()  # Début explicite de la transaction
+        print(f"[DB] Transaction started for session {session_id}")
         yield session
         session.commit()
-        print(f"[DB] Session {session_id} committed successfully")
+        print(f"[DB] Transaction committed for session {session_id}")
     except Exception as e:
         if session:
             session.rollback()
-            print(f"[DB] Session {session_id} rolled back due to error: {str(e)}")
+            print(f"[DB] Transaction rolled back for session {session_id} due to: {str(e)}")
         raise
     finally:
         if session:
             session.close()
+            print(f"[DB] Session {session_id} closed")
+            # Forcer la fin de la transaction
+            session.remove()
             db.engine.dispose()
-            print(f"[DB] Session {session_id} closed and connections disposed")
+            print(f"[DB] Connections disposed for session {session_id}")
 
 def retry_on_db_lock(max_retries=3, delay=0.1):
     def decorator(f):

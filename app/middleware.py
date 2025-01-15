@@ -9,19 +9,30 @@ def setup_db_connection_handling(app):
     def before_request():
         session_id = id(db.session())
         g.db_session = db.session()
-        print(f"[DB] Created request session {session_id} for {request.endpoint}")
+        g.db_session.begin()  # Début explicite de la transaction
+        print(f"[DB] Request started with session {session_id}")
 
     @app.teardown_appcontext
     def teardown_appcontext(exception=None):
         if hasattr(g, 'db_session'):
             session_id = id(g.db_session)
+            if exception:
+                g.db_session.rollback()
+                print(f"[DB] Transaction rolled back for session {session_id} due to: {str(exception)}")
+            else:
+                try:
+                    g.db_session.commit()
+                    print(f"[DB] Transaction committed for session {session_id}")
+                except:
+                    g.db_session.rollback()
+                    print(f"[DB] Transaction rolled back for session {session_id}")
             g.db_session.close()
-            print(f"[DB] Closed request session {session_id}")
+            print(f"[DB] Session {session_id} closed")
             del g.db_session
+        
+        # Forcer le nettoyage des connexions
         db.session.remove()
-        if exception:
-            print(f"[DB] Exception occurred, disposing engine: {str(exception)}")
-            db.engine.dispose()
+        db.engine.dispose()
 
     @event.listens_for(db.engine, 'checkout')
     def receive_checkout(dbapi_connection, connection_record, connection_proxy):
