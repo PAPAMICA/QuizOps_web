@@ -62,29 +62,51 @@ def users():
 @login_required
 @admin_required
 def toggle_admin(user_id):
+    # Get current user info
     user = User.query.get_or_404(user_id)
     if user == current_user:
         flash('You cannot modify your own admin status.', 'error')
     else:
-        user.is_admin = not user.is_admin
-        db.session.commit()
-        flash(f'Admin status for {user.username} has been {"granted" if user.is_admin else "revoked"}.', 'success')
+        try:
+            # Toggle admin status using direct SQL
+            db.session.execute(
+                "UPDATE \"user\" SET is_admin = NOT is_admin WHERE id = :user_id RETURNING is_admin",
+                {"user_id": user_id}
+            )
+            db.session.commit()
+            # Get the updated status
+            new_status = db.session.execute(
+                "SELECT is_admin FROM \"user\" WHERE id = :user_id",
+                {"user_id": user_id}
+            ).scalar()
+            flash(f'Admin status for {user.username} has been {"granted" if new_status else "revoked"}.', 'success')
+        except Exception as e:
+            print(f"Error toggling admin status: {str(e)}")
+            db.session.rollback()
+            flash('An error occurred while updating admin status.', 'error')
     return redirect(url_for('admin.users'))
 
 @bp.route('/user/<user_id>/delete', methods=['POST'])
 @login_required
 @admin_required
 def delete_user(user_id):
+    # Get user info for the message
     user = User.query.get_or_404(user_id)
     if user == current_user:
         flash('You cannot delete your own account.', 'error')
     else:
         try:
             username = user.username
-            # First, delete all quiz results for this user
-            QuizResult.query.filter_by(user_id=user_id).delete()
+            # Delete quiz results first
+            db.session.execute(
+                "DELETE FROM quiz_result WHERE user_id = :user_id",
+                {"user_id": user_id}
+            )
             # Then delete the user
-            User.query.filter_by(id=user_id).delete()
+            db.session.execute(
+                "DELETE FROM \"user\" WHERE id = :user_id",
+                {"user_id": user_id}
+            )
             db.session.commit()
             flash(f'User {username} has been deleted.', 'success')
         except Exception as e:
