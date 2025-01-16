@@ -181,39 +181,28 @@
         </div>
     </div>
 
-    <!-- Graphique des scores -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
-            <h2 class="text-xl font-semibold text-gray-200 mb-4">Score History</h2>
-            <div style="height: 300px;">
-                <canvas id="scoreChart"></canvas>
-            </div>
-        </div>
-
-        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
-            <h2 class="text-xl font-semibold text-gray-200 mb-4">Quiz Activity</h2>
-            <div style="height: 300px;">
-                <canvas id="activityChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Activity Chart -->
+    <!-- Activity Graph -->
     <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-gray-200">Activity</h3>
-            <div class="flex items-center space-x-2">
-                <a href="{{ url_for('auth.profile', username=user.username, time_range=30) }}"
-                   class="px-3 py-1 text-sm rounded-lg {% if time_range == 30 %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %} transition-colors duration-150">
+            <div class="flex space-x-2">
+                <a href="{{ url_for('auth.profile', username=user.username, time_range='30days') }}"
+                   class="px-3 py-1 text-sm rounded-full {% if time_range == '30days' %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
                     30 Days
                 </a>
-                <a href="{{ url_for('auth.profile', username=user.username, time_range=365) }}"
-                   class="px-3 py-1 text-sm rounded-lg {% if time_range == 365 %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %} transition-colors duration-150">
+                <a href="{{ url_for('auth.profile', username=user.username, time_range='365days') }}"
+                   class="px-3 py-1 text-sm rounded-full {% if time_range == '365days' %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
                     365 Days
                 </a>
             </div>
         </div>
         <canvas id="activityChart" class="w-full"></canvas>
+    </div>
+
+    <!-- Score Chart -->
+    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-200 mb-4">Score History (Last 20 Quizzes)</h3>
+        <canvas id="scoreChart"></canvas>
     </div>
 
     <!-- Statistiques par catégorie -->
@@ -353,83 +342,33 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const chartData = {{ chart_data|tojson }};
-    const timeRange = {{ time_range }};
+document.addEventListener('DOMContentLoaded', () => {
+    // Score Chart
+    const chartData = {
+        dates: {{ chart_data.dates|tojson|safe }},
+        scores: {{ chart_data.scores|tojson|safe }},
+        categories: {{ chart_data.categories|tojson|safe }},
+        activity: {{ chart_data.activity|tojson|safe }}
+    };
 
-    // Prepare activity data
-    const activityLabels = Object.keys(chartData.activity).sort();
-    const activityData = activityLabels.map(date => chartData.activity[date]);
+    const categoryColors = {
+        'docker': 'rgb(33, 150, 243)',
+        'kubernetes': 'rgb(0, 150, 136)',
+        'linux': 'rgb(244, 67, 54)',
+        'git': 'rgb(233, 30, 99)',
+        'ansible': 'rgb(156, 39, 176)',
+        'terraform': 'rgb(103, 58, 183)',
+        'aws': 'rgb(255, 152, 0)',
+        'gcp': 'rgb(255, 87, 34)',
+        'azure': 'rgb(3, 169, 244)',
+        'devops': 'rgb(139, 195, 74)'
+    };
 
-    // Activity Chart
-    new Chart(document.getElementById('activityChart'), {
-        type: 'bar',
-        data: {
-            labels: activityLabels,
-            datasets: [{
-                label: 'Quizzes Completed',
-                data: activityData,
-                backgroundColor: 'rgba(129, 140, 248, 0.2)',
-                borderColor: 'rgb(129, 140, 248)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        title: function(context) {
-                            const date = context[0].label;
-                            if (timeRange === 365) {
-                                return new Date(date + '-01').toLocaleString('default', { month: 'long', year: 'numeric' });
-                            }
-                            return new Date(date).toLocaleDateString();
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        color: 'rgb(156, 163, 175)'
-                    },
-                    grid: {
-                        color: 'rgba(75, 85, 99, 0.2)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: 'rgb(156, 163, 175)',
-                        callback: function(value, index) {
-                            const date = activityLabels[index];
-                            if (timeRange === 365) {
-                                return new Date(date + '-01').toLocaleString('default', { month: 'short' });
-                            }
-                            return new Date(date).getDate();
-                        }
-                    }
-                }
-            }
-        }
-    });
+    const pointBackgroundColors = chartData.categories.map(category => 
+        categoryColors[category.toLowerCase()] || 'rgb(129, 140, 248)'
+    );
 
     // Score Chart
-    const pointBackgroundColors = chartData.scores.map(score => {
-        if (score >= 80) return 'rgb(34, 197, 94)';
-        if (score >= 50) return 'rgb(234, 179, 8)';
-        return 'rgb(239, 68, 68)';
-    });
-
     new Chart(document.getElementById('scoreChart'), {
         type: 'line',
         data: {
@@ -489,6 +428,61 @@ document.addEventListener('DOMContentLoaded', function() {
             interaction: {
                 intersect: false,
                 mode: 'index'
+            }
+        }
+    });
+
+    // Activity Chart
+    new Chart(document.getElementById('activityChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(chartData.activity).map(date => {
+                {% if group_by == 'month' %}
+                const [year, month] = date.split('-');
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${monthNames[parseInt(month) - 1]} ${year}`;
+                {% else %}
+                const [year, month, day] = date.split('-');
+                return `${day}/${month}`;
+                {% endif %}
+            }),
+            datasets: [{
+                label: 'Quizzes Completed',
+                data: Object.values(chartData.activity),
+                backgroundColor: 'rgba(129, 140, 248, 0.2)',
+                borderColor: 'rgb(129, 140, 248)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        color: 'rgb(156, 163, 175)'
+                    },
+                    grid: {
+                        color: 'rgba(75, 85, 99, 0.2)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: 'rgb(156, 163, 175)',
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
             }
         }
     });

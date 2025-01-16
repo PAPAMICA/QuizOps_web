@@ -75,6 +75,15 @@ def profile(username):
     perfect_scores = sum(1 for result in quiz_results if result.percentage == 100)
     avg_score = sum(result.percentage for result in quiz_results) / total_quizzes if total_quizzes > 0 else 0
 
+    # Get time range for activity graph
+    time_range = request.args.get('time_range', '30days')
+    if time_range == '365days':
+        start_date = datetime.utcnow() - timedelta(days=365)
+        group_by = 'month'
+    else:  # 30days
+        start_date = datetime.utcnow() - timedelta(days=30)
+        group_by = 'day'
+
     # Prepare chart data
     chart_data = {
         'dates': [],
@@ -83,43 +92,38 @@ def profile(username):
         'activity': {}
     }
 
-    # Get time range from query parameters (30 days or 365 days)
-    time_range = request.args.get('time_range', '30')  # Default to 30 days
-    time_range = int(time_range)
-    
-    # Calculate date range
+    # Initialize activity data
+    current_date = start_date
     end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=time_range)
 
-    # Initialize activity data structure
-    if time_range == 30:
-        # For 30 days, show daily activity
-        current_date = start_date.date()
-        while current_date <= end_date.date():
+    if group_by == 'day':
+        while current_date <= end_date:
             chart_data['activity'][current_date.strftime('%Y-%m-%d')] = 0
             current_date += timedelta(days=1)
-    else:
-        # For 365 days, show monthly activity
-        current_date = start_date.replace(day=1)
+    else:  # month
         while current_date <= end_date:
             chart_data['activity'][current_date.strftime('%Y-%m')] = 0
-            current_date = (current_date + timedelta(days=32)).replace(day=1)
-
-    # Fill activity data
-    for result in quiz_results:
-        if result.completed_at >= start_date:
-            if time_range == 30:
-                date_key = result.completed_at.strftime('%Y-%m-%d')
+            # Add one month
+            if current_date.month == 12:
+                current_date = current_date.replace(year=current_date.year + 1, month=1)
             else:
-                date_key = result.completed_at.strftime('%Y-%m')
-            chart_data['activity'][date_key] = chart_data['activity'].get(date_key, 0) + 1
+                current_date = current_date.replace(month=current_date.month + 1)
 
-    # Get the last 20 quiz results for the score chart (ordered from oldest to newest)
-    recent_results = sorted(quiz_results[-20:], key=lambda x: x.completed_at)
+    # Get the last 20 quiz results for the score chart
+    recent_results = sorted(quiz_results[:20], key=lambda x: x.completed_at)
     for result in recent_results:
         chart_data['dates'].append(result.completed_at.strftime('%d/%m/%Y'))
         chart_data['scores'].append(float(result.percentage))
         chart_data['categories'].append(result.category)
+
+    # Fill activity data
+    for result in quiz_results:
+        if result.completed_at >= start_date:
+            if group_by == 'day':
+                date_key = result.completed_at.strftime('%Y-%m-%d')
+            else:
+                date_key = result.completed_at.strftime('%Y-%m')
+            chart_data['activity'][date_key] = chart_data['activity'].get(date_key, 0) + 1
 
     # Load categories from quiz directory
     quiz_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'QuizOps_quiz')
@@ -143,6 +147,7 @@ def profile(username):
     # Calculate category statistics
     category_stats = {}
     for result in quiz_results:
+        # Skip custom quizzes for category stats
         if ',' in result.category or result.category.startswith('custom'):
             continue
 
@@ -167,7 +172,8 @@ def profile(username):
                          total_quizzes=total_quizzes,
                          avg_score=avg_score,
                          perfect_scores=perfect_scores,
-                         time_range=time_range)
+                         time_range=time_range,
+                         group_by=group_by)
 
 @bp.route('/leaderboard')
 def leaderboard():

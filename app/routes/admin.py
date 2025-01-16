@@ -5,7 +5,6 @@ from app import db
 from functools import wraps
 from sqlalchemy import func
 from datetime import datetime, timedelta
-from flask_session import session_manager
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -147,16 +146,16 @@ def quizzes():
 @admin_required
 def delete_quiz(quiz_id):
     try:
-        with session_manager() as db_session:
-            quiz_result = db_session.query(QuizResult).get(quiz_id)
-            if not quiz_result:
-                flash('Quiz result not found.', 'error')
-                return redirect(url_for('admin.quizzes'))
-            
-            db_session.delete(quiz_result)
-            flash('Quiz result deleted successfully.', 'success')
+        # Delete quiz result directly in DB
+        db.session.execute(
+            "DELETE FROM quiz_result WHERE id = :quiz_id",
+            {"quiz_id": quiz_id}
+        )
+        db.session.commit()
+        flash('Quiz result deleted successfully.', 'success')
     except Exception as e:
-        current_app.logger.error(f"Error deleting quiz result: {e}")
+        print(f"Error deleting quiz result: {str(e)}")
+        db.session.rollback()
         flash('An error occurred while deleting the quiz result.', 'error')
     
     # Rediriger vers la page précédente avec les paramètres de recherche
