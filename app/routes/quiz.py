@@ -250,7 +250,6 @@ def show_results(quiz_id):
             new_idx = int(new_idx_str)
             old_idx = int(old_idx_str)
             options[new_idx] = question['options'][old_idx]
-
         q['options'] = options
 
         # Récupérer la réponse de l'utilisateur (déjà dans l'ordre mélangé)
@@ -284,7 +283,8 @@ def show_results(quiz_id):
             'is_correct': is_correct
         })
 
-    score_percentage = round((correct_answers / total_questions) * 100)
+    # Calculate score percentage, handling the case when total_questions is 0
+    score_percentage = round((correct_answers / total_questions) * 100) if total_questions > 0 else 0
 
     try:
         with session_manager() as db_session:

@@ -181,28 +181,35 @@
         </div>
     </div>
 
-    <!-- Activity Graph -->
-    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-gray-200">Activity</h3>
-            <div class="flex space-x-2">
-                <a href="{{ url_for('auth.profile', username=user.username, time_range='30days') }}"
-                   class="px-3 py-1 text-sm rounded-full {% if time_range == '30days' %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
-                    30 Days
-                </a>
-                <a href="{{ url_for('auth.profile', username=user.username, time_range='365days') }}"
-                   class="px-3 py-1 text-sm rounded-full {% if time_range == '365days' %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
-                    365 Days
-                </a>
+    <!-- Activity and Score Charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Activity Graph -->
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-200">Activity</h3>
+                <div class="flex space-x-2">
+                    <a href="{{ url_for('auth.profile', username=user.username, time_range='30days') }}"
+                       class="px-3 py-1 text-sm rounded-full {% if time_range == '30days' %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
+                        30 Days
+                    </a>
+                    <a href="{{ url_for('auth.profile', username=user.username, time_range='365days') }}"
+                       class="px-3 py-1 text-sm rounded-full {% if time_range == '365days' %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
+                        365 Days
+                    </a>
+                </div>
+            </div>
+            <div style="height: 300px;">
+                <canvas id="activityChart"></canvas>
             </div>
         </div>
-        <canvas id="activityChart" class="w-full"></canvas>
-    </div>
 
-    <!-- Score Chart -->
-    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-200 mb-4">Score History (Last 20 Quizzes)</h3>
-        <canvas id="scoreChart"></canvas>
+        <!-- Score Chart -->
+        <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-gray-200 mb-4">Score History (Last 20 Quizzes)</h3>
+            <div style="height: 300px;">
+                <canvas id="scoreChart"></canvas>
+            </div>
+        </div>
     </div>
 
     <!-- Statistiques par catégorie -->
@@ -342,31 +349,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Score Chart
-    const chartData = {
-        dates: {{ chart_data.dates|tojson|safe }},
-        scores: {{ chart_data.scores|tojson|safe }},
-        categories: {{ chart_data.categories|tojson|safe }},
-        activity: {{ chart_data.activity|tojson|safe }}
-    };
-
-    const categoryColors = {
-        'docker': 'rgb(33, 150, 243)',
-        'kubernetes': 'rgb(0, 150, 136)',
-        'linux': 'rgb(244, 67, 54)',
-        'git': 'rgb(233, 30, 99)',
-        'ansible': 'rgb(156, 39, 176)',
-        'terraform': 'rgb(103, 58, 183)',
-        'aws': 'rgb(255, 152, 0)',
-        'gcp': 'rgb(255, 87, 34)',
-        'azure': 'rgb(3, 169, 244)',
-        'devops': 'rgb(139, 195, 74)'
-    };
-
-    const pointBackgroundColors = chartData.categories.map(category => 
-        categoryColors[category.toLowerCase()] || 'rgb(129, 140, 248)'
-    );
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {{ chart_data|tojson }};
 
     // Score Chart
     new Chart(document.getElementById('scoreChart'), {
@@ -378,56 +362,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: chartData.scores,
                 borderColor: 'rgb(129, 140, 248)',
                 backgroundColor: 'rgba(129, 140, 248, 0.1)',
-                pointBackgroundColor: pointBackgroundColors,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                tension: 0.4,
+                tension: 0.1,
                 fill: true
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const score = context.raw;
-                            const category = chartData.categories[context.dataIndex];
-                            return `${category}: ${score}%`;
-                        }
-                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     max: 100,
+                    ticks: {
+                        color: 'rgb(156, 163, 175)'
+                    },
                     grid: {
                         color: 'rgba(75, 85, 99, 0.2)'
-                    },
-                    ticks: {
-                        color: 'rgb(156, 163, 175)',
-                        callback: function(value) {
-                            return value + '%';
-                        }
                     }
                 },
                 x: {
                     grid: {
-                        color: 'rgba(75, 85, 99, 0.2)'
+                        display: false
                     },
                     ticks: {
-                        color: 'rgb(156, 163, 175)'
+                        color: 'rgb(156, 163, 175)',
+                        maxRotation: 45,
+                        minRotation: 45
                     }
                 }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
             }
         }
     });
@@ -443,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `${monthNames[parseInt(month) - 1]} ${year}`;
                 {% else %}
                 const [year, month, day] = date.split('-');
-                return `${day}/${month}`;
+                return day && month ? `${day}/${month}` : '';
                 {% endif %}
             }),
             datasets: [{
@@ -456,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
