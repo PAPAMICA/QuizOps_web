@@ -284,8 +284,7 @@ def show_results(quiz_id):
             'is_correct': is_correct
         })
 
-    # Handle case where there are no questions or all answers are wrong
-    score_percentage = round((correct_answers / total_questions) * 100) if total_questions > 0 else 0
+    score_percentage = round((correct_answers / total_questions) * 100)
 
     try:
         with session_manager() as db_session:
@@ -604,7 +603,7 @@ def show_demo_results(quiz_id):
             'is_correct': is_correct
         })
     
-    score_percentage = round((correct_answers / total_questions) * 100) if total_questions > 0 else 0
+    score_percentage = round((correct_answers / total_questions) * 100)
     
     # Clear demo session
     session.pop('is_demo', None)
