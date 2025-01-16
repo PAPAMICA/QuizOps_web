@@ -144,10 +144,11 @@
                             {{ user.created_at.strftime('%Y-%m-%d %H:%M') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <a href="{{ url_for('admin.quiz_results', search=user.username) }}" 
-                               class="text-indigo-400 hover:text-indigo-300 transition-colors mr-3">
-                                <i class="fas fa-history"></i> Quiz History
-                            </a>
+                            {% if user.email_verified %}
+                            <span class="px-2 py-1 bg-green-900/50 text-green-400 rounded-full text-sm">Verified</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-yellow-900/50 text-yellow-400 rounded-full text-sm">Pending</span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

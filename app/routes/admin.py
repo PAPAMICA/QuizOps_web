@@ -82,8 +82,26 @@ def index():
 @login_required
 @admin_required
 def users():
-    users = User.query.all()
-    return render_template('admin/users.html', users=users)
+    # Get search query
+    search = request.args.get('search', '').strip()
+    
+    # Base query
+    query = User.query
+    
+    # Apply search filter if present
+    if search:
+        query = query.filter(
+            (User.username.ilike(f'%{search}%')) |
+            (User.email.ilike(f'%{search}%'))
+        )
+    
+    # Order by creation date (most recent first)
+    query = query.order_by(User.created_at.desc())
+    
+    # Execute query
+    users = query.all()
+    
+    return render_template('admin/users.html', users=users, search=search)
 
 @bp.route('/user/<user_id>/toggle-admin', methods=['POST'])
 @login_required
