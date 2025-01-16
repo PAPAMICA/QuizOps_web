@@ -53,9 +53,9 @@
                             {{ question.question }}
                         </h2>
                         <!-- Logo de la technologie -->
-                        {% if question.id.split('_')[0] in config.CATEGORIES %}
+                        {% if question.id.split('_')[0] in categories %}
                         <div class="flex-shrink-0">
-                            {% set category = config.CATEGORIES[question.id.split('_')[0]] %}
+                            {% set category = categories[question.id.split('_')[0]] %}
                             {% if category.logo %}
                             <div class="h-12 w-12 bg-gray-800 rounded-lg p-2 flex items-center justify-center">
                                 <img src="{{ category.logo }}" alt="{{ category.name }}" class="h-8 w-8 object-contain">
