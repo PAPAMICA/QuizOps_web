@@ -83,31 +83,28 @@ def start_quiz(quiz_id):
     """Démarre un quiz"""
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz:
-        return render_template('404.html'), 404
+        flash('Quiz not found.', 'error')
+        return redirect(url_for('quiz.list_quizzes'))
 
-    # Initialiser la session du quiz
+    # Initialize the session
     session['current_quiz'] = quiz_id
     session['current_question'] = 0
     session['answers'] = {}
 
-    # Mélanger l'ordre des questions
+    # Shuffle questions
     questions = quiz['questions'].copy()
     random.shuffle(questions)
 
-    # Sauvegarder l'ordre des questions
+    # Save questions order using their IDs
     session['questions_order'] = [q['id'] for q in questions]
 
-    # Mélanger l'ordre des options pour chaque question
+    # Shuffle options for each question
     session['shuffled_options'] = {}
     for i, question in enumerate(questions, 1):
-        # Créer une liste d'indices
         original_indices = list(range(len(question['options'])))
-        # Créer une copie pour le mélange
         shuffled_indices = original_indices.copy()
-        # Mélanger les indices
         random.shuffle(shuffled_indices)
 
-        # Créer les mappings dans les deux sens
         original_to_shuffled = {str(old_idx): str(new_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
         shuffled_to_original = {str(new_idx): str(old_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
 
@@ -115,9 +112,6 @@ def start_quiz(quiz_id):
             'shuffled_to_original': shuffled_to_original,
             'original_to_shuffled': original_to_shuffled
         }
-
-    # Sauvegarder les questions mélangées
-    session['questions'] = questions
 
     return redirect(url_for('quiz.show_question', quiz_id=quiz_id, question_number=1))
 
@@ -134,13 +128,24 @@ def show_question(quiz_id, question_number):
     categories = dict(current_app.quiz_manager.get_categories())
 
     # Get the current question
-    questions = session.get('questions_order', [])
-    if not questions or question_number > len(questions):
+    questions_order = session.get('questions_order', [])
+    if not questions_order or question_number > len(questions_order):
         flash('Invalid question number.', 'error')
         return redirect(url_for('quiz.list_quizzes'))
 
-    question = quiz['questions'][questions[question_number - 1]]
-    total_questions = len(questions)
+    # Find the question with the corresponding ID
+    question_id = questions_order[question_number - 1]
+    question = None
+    for q in quiz['questions']:
+        if str(q.get('id')) == str(question_id):
+            question = q
+            break
+
+    if not question:
+        flash('Question not found.', 'error')
+        return redirect(url_for('quiz.list_quizzes'))
+
+    total_questions = len(questions_order)
 
     # Get shuffled options
     shuffled_options = []
@@ -170,8 +175,14 @@ def answer_question(quiz_id, question_number):
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
 
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
-    if not quiz or question_number < 1 or question_number > len(quiz['questions']):
-        return render_template('404.html'), 404
+    if not quiz:
+        flash('Quiz not found.', 'error')
+        return redirect(url_for('quiz.list_quizzes'))
+
+    questions_order = session.get('questions_order', [])
+    if not questions_order or question_number > len(questions_order):
+        flash('Invalid question number.', 'error')
+        return redirect(url_for('quiz.list_quizzes'))
 
     # Récupérer la réponse
     answer = request.form.get('answer')
@@ -191,7 +202,7 @@ def answer_question(quiz_id, question_number):
         session['answers'] = answers
 
     # Rediriger vers la question suivante si ce n'est pas la dernière
-    if question_number < len(quiz['questions']):
+    if question_number < len(questions_order):
         return redirect(url_for('quiz.show_question',
                               quiz_id=quiz_id,
                               question_number=question_number + 1))
@@ -476,13 +487,24 @@ def show_demo_question(quiz_id, question_number):
     categories = dict(current_app.quiz_manager.get_categories())
 
     # Get the current question
-    questions = session.get('questions_order', [])
-    if not questions or question_number > len(questions):
+    questions_order = session.get('questions_order', [])
+    if not questions_order or question_number > len(questions_order):
         flash('Invalid question number.', 'error')
         return redirect(url_for('main.index'))
 
-    question = quiz['questions'][questions[question_number - 1]]
-    total_questions = len(questions)
+    # Find the question with the corresponding ID
+    question_id = questions_order[question_number - 1]
+    question = None
+    for q in quiz['questions']:
+        if str(q.get('id')) == str(question_id):
+            question = q
+            break
+
+    if not question:
+        flash('Question not found.', 'error')
+        return redirect(url_for('main.index'))
+
+    total_questions = len(questions_order)
 
     # Get shuffled options
     shuffled_options = []
