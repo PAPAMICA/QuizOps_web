@@ -23,8 +23,7 @@
                                 <input type="checkbox" 
                                        name="technologies[]" 
                                        value="{{ category }}"
-                                       class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800"
-                                       {% if not current_user.is_authenticated %}disabled{% endif %}>
+                                       class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800">
                             </div>
                             <div class="ml-3 flex items-center">
                                 {% if config.logo %}
@@ -44,7 +43,7 @@
                     </label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <label class="relative flex items-center p-4 rounded-lg border border-green-700/50 bg-green-900/20 cursor-pointer hover:bg-green-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-green-500">
-                            <input type="radio" name="level" value="beginner" class="sr-only peer" required {% if not current_user.is_authenticated %}disabled{% endif %}>
+                            <input type="radio" name="level" value="beginner" class="sr-only peer" required>
                             <div class="flex items-center">
                                 <div class="h-4 w-4 rounded-full border-2 border-green-500 flex items-center justify-center peer-checked:bg-green-500">
                                     <div class="h-2 w-2 rounded-full bg-green-500 opacity-0 peer-checked:opacity-100"></div>
@@ -53,7 +52,7 @@
                             </div>
                         </label>
                         <label class="relative flex items-center p-4 rounded-lg border border-blue-700/50 bg-blue-900/20 cursor-pointer hover:bg-blue-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-blue-500">
-                            <input type="radio" name="level" value="intermediate" class="sr-only peer" required {% if not current_user.is_authenticated %}disabled{% endif %}>
+                            <input type="radio" name="level" value="intermediate" class="sr-only peer" required>
                             <div class="flex items-center">
                                 <div class="h-4 w-4 rounded-full border-2 border-blue-500 flex items-center justify-center peer-checked:bg-blue-500">
                                     <div class="h-2 w-2 rounded-full bg-blue-500 opacity-0 peer-checked:opacity-100"></div>
@@ -62,7 +61,7 @@
                             </div>
                         </label>
                         <label class="relative flex items-center p-4 rounded-lg border border-purple-700/50 bg-purple-900/20 cursor-pointer hover:bg-purple-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-purple-500">
-                            <input type="radio" name="level" value="advanced" class="sr-only peer" required {% if not current_user.is_authenticated %}disabled{% endif %}>
+                            <input type="radio" name="level" value="advanced" class="sr-only peer" required>
                             <div class="flex items-center">
                                 <div class="h-4 w-4 rounded-full border-2 border-purple-500 flex items-center justify-center peer-checked:bg-purple-500">
                                     <div class="h-2 w-2 rounded-full bg-purple-500 opacity-0 peer-checked:opacity-100"></div>
@@ -71,7 +70,7 @@
                             </div>
                         </label>
                         <label class="relative flex items-center p-4 rounded-lg border border-red-700/50 bg-red-900/20 cursor-pointer hover:bg-red-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-red-500">
-                            <input type="radio" name="level" value="expert" class="sr-only peer" required {% if not current_user.is_authenticated %}disabled{% endif %}>
+                            <input type="radio" name="level" value="expert" class="sr-only peer" required>
                             <div class="flex items-center">
                                 <div class="h-4 w-4 rounded-full border-2 border-red-500 flex items-center justify-center peer-checked:bg-red-500">
                                     <div class="h-2 w-2 rounded-full bg-red-500 opacity-0 peer-checked:opacity-100"></div>
@@ -85,19 +84,11 @@
 
             <!-- Submit Button -->
             <div class="flex justify-center">
-                {% if current_user.is_authenticated %}
                 <button type="submit"
                         class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
                     <i class="fas fa-magic mr-2"></i>
                     Generate Custom Quiz
                 </button>
-                {% else %}
-                <a href="{{ url_for('auth.login') }}"
-                   class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
-                    <i class="fas fa-sign-in-alt mr-2"></i>
-                    Login to Create Quiz
-                </a>
-                {% endif %}
             </div>
         </form>
     </div>

@@ -83,28 +83,31 @@ def start_quiz(quiz_id):
     """Démarre un quiz"""
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
     if not quiz:
-        flash('Quiz not found.', 'error')
-        return redirect(url_for('quiz.list_quizzes'))
+        return render_template('404.html'), 404
 
-    # Initialize the session
+    # Initialiser la session du quiz
     session['current_quiz'] = quiz_id
     session['current_question'] = 0
     session['answers'] = {}
 
-    # Shuffle questions
+    # Mélanger l'ordre des questions
     questions = quiz['questions'].copy()
     random.shuffle(questions)
 
-    # Save questions order using their IDs
+    # Sauvegarder l'ordre des questions
     session['questions_order'] = [q['id'] for q in questions]
 
-    # Shuffle options for each question
+    # Mélanger l'ordre des options pour chaque question
     session['shuffled_options'] = {}
     for i, question in enumerate(questions, 1):
+        # Créer une liste d'indices
         original_indices = list(range(len(question['options'])))
+        # Créer une copie pour le mélange
         shuffled_indices = original_indices.copy()
+        # Mélanger les indices
         random.shuffle(shuffled_indices)
 
+        # Créer les mappings dans les deux sens
         original_to_shuffled = {str(old_idx): str(new_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
         shuffled_to_original = {str(new_idx): str(old_idx) for new_idx, old_idx in enumerate(shuffled_indices)}
 
@@ -113,58 +116,55 @@ def start_quiz(quiz_id):
             'original_to_shuffled': original_to_shuffled
         }
 
+    # Sauvegarder les questions mélangées
+    session['questions'] = questions
+
     return redirect(url_for('quiz.show_question', quiz_id=quiz_id, question_number=1))
 
 @bp.route('/quiz/<quiz_id>/question/<int:question_number>')
 @login_required
 @set_locale
 def show_question(quiz_id, question_number):
+    """Affiche une question du quiz"""
+    # Vérifier que l'utilisateur a bien démarré ce quiz
+    if session.get('current_quiz') != quiz_id:
+        return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
+
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
-    if not quiz:
-        flash('Quiz not found.', 'error')
-        return redirect(url_for('quiz.list_quizzes'))
+    if not quiz or question_number < 1 or question_number > len(quiz['questions']):
+        return render_template('404.html'), 404
 
-    # Get categories configurations
-    categories = dict(current_app.quiz_manager.get_categories())
+    # Récupérer la question dans l'ordre mélangé
+    questions = session.get('questions', [])
+    question = questions[question_number - 1].copy()
+    mappings = session['shuffled_options'][str(question_number)]
 
-    # Get the current question
-    questions_order = session.get('questions_order', [])
-    if not questions_order or question_number > len(questions_order):
-        flash('Invalid question number.', 'error')
-        return redirect(url_for('quiz.list_quizzes'))
+    # Réorganiser les options
+    options = [''] * len(question['options'])
 
-    # Find the question with the corresponding ID
-    question_id = questions_order[question_number - 1]
-    question = None
-    for q in quiz['questions']:
-        if str(q.get('id')) == str(question_id):
-            question = q
-            break
+    for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
+        new_idx = int(new_idx_str)
+        old_idx = int(old_idx_str)
+        options[new_idx] = question['options'][old_idx]
 
-    if not question:
-        flash('Question not found.', 'error')
-        return redirect(url_for('quiz.list_quizzes'))
+    question['options'] = options
 
-    total_questions = len(questions_order)
+    # Mettre à jour l'index de la bonne réponse
+    original_correct = question['correct_answer']
+    question['correct_answer'] = int(mappings['original_to_shuffled'][str(original_correct)])
 
-    # Get shuffled options
-    shuffled_options = []
-    if str(question_number - 1) in session.get('shuffled_options', {}):
-        original_to_shuffled = session['shuffled_options'][str(question_number - 1)]['original_to_shuffled']
-        for i in range(len(question['options'])):
-            shuffled_options.append(question['options'][int(original_to_shuffled[str(i)])])
-    else:
-        shuffled_options = question['options']
-
-    question['options'] = shuffled_options
+    # Récupérer les informations des catégories
+    categories = {}
+    for category, config in current_app.quiz_manager.get_categories():
+        categories[category] = config
 
     return render_template('quiz/question.html',
                          quiz=quiz,
                          question=question,
                          question_number=question_number,
-                         total_questions=total_questions,
+                         total_questions=len(quiz['questions']),
                          categories=categories,
-                         is_demo=False)
+                         is_demo=session.get('is_demo', False))
 
 @bp.route('/quiz/<quiz_id>/question/<int:question_number>/answer', methods=['POST'])
 @login_required
@@ -175,14 +175,8 @@ def answer_question(quiz_id, question_number):
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
 
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
-    if not quiz:
-        flash('Quiz not found.', 'error')
-        return redirect(url_for('quiz.list_quizzes'))
-
-    questions_order = session.get('questions_order', [])
-    if not questions_order or question_number > len(questions_order):
-        flash('Invalid question number.', 'error')
-        return redirect(url_for('quiz.list_quizzes'))
+    if not quiz or question_number < 1 or question_number > len(quiz['questions']):
+        return render_template('404.html'), 404
 
     # Récupérer la réponse
     answer = request.form.get('answer')
@@ -202,7 +196,7 @@ def answer_question(quiz_id, question_number):
         session['answers'] = answers
 
     # Rediriger vers la question suivante si ce n'est pas la dernière
-    if question_number < len(questions_order):
+    if question_number < len(quiz['questions']):
         return redirect(url_for('quiz.show_question',
                               quiz_id=quiz_id,
                               question_number=question_number + 1))
@@ -478,50 +472,42 @@ def demo_quiz():
 @bp.route('/demo/<quiz_id>/question/<int:question_number>')
 @set_locale
 def show_demo_question(quiz_id, question_number):
+    """Show a question from the demo quiz"""
+    if session.get('current_quiz') != quiz_id or not session.get('is_demo'):
+        return redirect(url_for('quiz.demo_quiz'))
+    
     quiz = current_app.quiz_manager.get_quiz(quiz_id)
-    if not quiz:
-        flash('Quiz not found.', 'error')
-        return redirect(url_for('main.index'))
+    if not quiz or question_number < 1 or question_number > len(quiz['questions']):
+        return render_template('404.html'), 404
+    
+    # Get question in shuffled order
+    questions = session.get('questions', [])
+    question = questions[question_number - 1].copy()
+    mappings = session['shuffled_options'][str(question_number)]
+    
+    # Reorganize options
+    options = [''] * len(question['options'])
+    for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
+        new_idx = int(new_idx_str)
+        old_idx = int(old_idx_str)
+        options[new_idx] = question['options'][old_idx]
+    
+    question['options'] = options
+    
+    # Update correct answer index
+    original_correct = question['correct_answer']
+    question['correct_answer'] = int(mappings['original_to_shuffled'][str(original_correct)])
 
-    # Get categories configurations
-    categories = dict(current_app.quiz_manager.get_categories())
-
-    # Get the current question
-    questions_order = session.get('questions_order', [])
-    if not questions_order or question_number > len(questions_order):
-        flash('Invalid question number.', 'error')
-        return redirect(url_for('main.index'))
-
-    # Find the question with the corresponding ID
-    question_id = questions_order[question_number - 1]
-    question = None
-    for q in quiz['questions']:
-        if str(q.get('id')) == str(question_id):
-            question = q
-            break
-
-    if not question:
-        flash('Question not found.', 'error')
-        return redirect(url_for('main.index'))
-
-    total_questions = len(questions_order)
-
-    # Get shuffled options
-    shuffled_options = []
-    if str(question_number - 1) in session.get('shuffled_options', {}):
-        original_to_shuffled = session['shuffled_options'][str(question_number - 1)]['original_to_shuffled']
-        for i in range(len(question['options'])):
-            shuffled_options.append(question['options'][int(original_to_shuffled[str(i)])])
-    else:
-        shuffled_options = question['options']
-
-    question['options'] = shuffled_options
+    # Récupérer les informations des catégories
+    categories = {}
+    for category, config in current_app.quiz_manager.get_categories():
+        categories[category] = config
 
     return render_template('quiz/question.html',
                          quiz=quiz,
                          question=question,
                          question_number=question_number,
-                         total_questions=total_questions,
+                         total_questions=len(quiz['questions']),
                          categories=categories,
                          is_demo=True)
 
