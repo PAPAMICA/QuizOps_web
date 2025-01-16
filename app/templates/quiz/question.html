@@ -48,26 +48,34 @@
             <div class="space-y-6">
                 <!-- Question text -->
                 <div class="bg-gray-700 p-4 rounded-lg border border-gray-600">
-                    <div class="flex items-start justify-between">
-                        <h2 class="text-lg font-medium text-gray-100 mb-4 flex-grow">
-                            {{ question.question }}
-                        </h2>
+                    <div class="flex items-center gap-4">
                         {% if question.category %}
-                        <div class="ml-4 flex-shrink-0">
+                        <div class="flex-shrink-0">
                             <img src="{{ categories[question.category].logo }}" alt="{{ categories[question.category].name }}" 
-                                 class="h-8 w-8 object-contain bg-gray-800 rounded-lg p-1"
+                                 class="h-12 w-12 object-contain bg-gray-800 rounded-lg p-1.5"
                                  title="{{ categories[question.category].name }}">
                         </div>
                         {% endif %}
+                        <h2 class="text-lg font-medium text-gray-100">
+                            {{ question.question }}
+                        </h2>
                     </div>
 
                     <!-- Options -->
-                    <form id="question-form" action="{% if is_demo %}{{ url_for('quiz.answer_demo_question', quiz_id=quiz.id, question_number=question_number) }}{% else %}{{ url_for('quiz.answer_question', quiz_id=quiz.id, question_number=question_number) }}{% endif %}" method="post" class="space-y-3">
+                    <form id="question-form" action="{% if is_demo %}{{ url_for('quiz.answer_demo_question', quiz_id=quiz.id, question_number=question_number) }}{% else %}{{ url_for('quiz.answer_question', quiz_id=quiz.id, question_number=question_number) }}{% endif %}" method="post" class="space-y-3 mt-6">
                         {% for option in question.options %}
-                        <label class="flex items-center p-4 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors duration-150 group">
-                            <input type="radio" name="answer" value="{{ loop.index0 }}" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 bg-gray-700">
-                            <span class="ml-3 text-gray-100 group-hover:text-gray-50">{{ option }}</span>
-                        </label>
+                        <div class="relative">
+                            <input type="radio" name="answer" value="{{ loop.index0 }}" 
+                                   id="option-{{ loop.index0 }}"
+                                   class="peer hidden">
+                            <label for="option-{{ loop.index0 }}" 
+                                   class="flex items-center p-4 bg-gray-800 border-2 border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-all duration-150">
+                                <div class="flex-shrink-0 w-4 h-4 border-2 border-gray-500 rounded-full flex items-center justify-center">
+                                    <div class="w-2 h-2 rounded-full bg-[#5046E5] radio-dot opacity-0 transition-opacity duration-150"></div>
+                                </div>
+                                <span class="ml-3 text-gray-100">{{ option }}</span>
+                            </label>
+                        </div>
                         {% endfor %}
 
                         <div class="mt-6 flex justify-center">
@@ -144,6 +152,14 @@ document.addEventListener('DOMContentLoaded', startTimer);
 <style>
 .progress-bar {
     width: var(--progress-width);
+}
+
+input[type="radio"]:checked + label {
+    border-color: #5046E5;
+}
+
+input[type="radio"]:checked + label .radio-dot {
+    opacity: 1;
 }
 </style>
 {% endblock %}

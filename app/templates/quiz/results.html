@@ -142,4 +142,94 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if score_percentage == 100 %}
+    // Configuration pour un effet de confetti festif
+    var duration = 15 * 1000;
+    var animationEnd = Date.now() + duration;
+    var defaults = {
+        startVelocity: 30,
+        spread: 360,
+        ticks: 60,
+        zIndex: 0,
+        shapes: ['square', 'circle'],
+        colors: ['#5046E5', '#34D399', '#F59E0B', '#EC4899', '#8B5CF6']
+    };
+
+    function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    // Effet initial explosif
+    confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ['#5046E5', '#34D399', '#F59E0B', '#EC4899', '#8B5CF6']
+    });
+
+    // Canons latéraux
+    function fireCanon(x) {
+        confetti({
+            particleCount: 50,
+            angle: x === 0 ? 60 : 120,
+            spread: 55,
+            origin: { x, y: 0.7 },
+            colors: ['#5046E5', '#34D399', '#F59E0B', '#EC4899', '#8B5CF6']
+        });
+    }
+
+    // Tirer les canons latéraux
+    setTimeout(() => {
+        fireCanon(0);
+        fireCanon(1);
+    }, 500);
+
+    // Animation continue
+    var interval = setInterval(function() {
+        var timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+            return clearInterval(interval);
+        }
+
+        var particleCount = 50 * (timeLeft / duration);
+        
+        // Confettis qui tombent depuis le haut
+        confetti(Object.assign({}, defaults, { 
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.9), y: Math.random() - 0.2 },
+            gravity: randomInRange(0.4, 0.6),
+            scalar: randomInRange(0.4, 1),
+        }));
+
+        // Confettis qui montent depuis le bas
+        confetti(Object.assign({}, defaults, { 
+            particleCount: particleCount * 0.5,
+            origin: { x: randomInRange(0.1, 0.9), y: Math.random() + 0.8 },
+            gravity: randomInRange(-0.4, -0.2),
+            scalar: randomInRange(0.4, 1),
+        }));
+    }, 250);
+
+    // Effet final après 2 secondes
+    setTimeout(() => {
+        fireCanon(0.2);
+        fireCanon(0.8);
+        confetti({
+            particleCount: 150,
+            spread: 100,
+            origin: { y: 0.6 },
+            colors: ['#5046E5', '#34D399', '#F59E0B', '#EC4899', '#8B5CF6'],
+            gravity: 0.8,
+            scalar: 2,
+            drift: 2
+        });
+    }, 2000);
+    {% endif %}
+});
+</script>
 {% endblock %}
