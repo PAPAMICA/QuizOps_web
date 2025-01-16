@@ -59,6 +59,7 @@ def index():
 @login_required
 @admin_required
 def users():
+    # Trier les utilisateurs par date d'inscription (plus récent en premier)
     users = User.query.order_by(User.created_at.desc()).all()
     return render_template('admin/users.html', users=users)
 
@@ -123,29 +124,22 @@ def delete_user(user_id):
 @login_required
 @admin_required
 def quizzes():
-    # Get user filter
-    user_id = request.args.get('user_id')
+    # Récupérer le terme de recherche
+    search_term = request.args.get('search', '')
     
-    # Base query
-    query = db.session.query(
-        QuizResult,
-        User
-    ).join(User)
+    # Base query pour les résultats de quiz
+    query = db.session.query(QuizResult, User).join(User)
     
-    # Apply user filter if provided
-    if user_id:
-        query = query.filter(QuizResult.user_id == user_id)
+    # Appliquer le filtre de recherche si présent
+    if search_term:
+        query = query.filter(User.username.ilike(f'%{search_term}%'))
     
-    # Get all users for the filter dropdown
-    users = User.query.order_by(User.username).all()
-    
-    # Get results ordered by completion date
+    # Récupérer les résultats triés par date
     results = query.order_by(QuizResult.completed_at.desc()).all()
     
-    return render_template('admin/quizzes.html',
+    return render_template('admin/quizzes.html', 
                          results=results,
-                         users=users,
-                         selected_user_id=user_id)
+                         search_term=search_term)
 
 @bp.route('/quiz/<quiz_id>/delete', methods=['POST'])
 @login_required
@@ -158,6 +152,7 @@ def delete_quiz(quiz_id):
         flash('Quiz result deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash('Error deleting quiz result.', 'error')
+        flash('An error occurred while deleting the quiz result.', 'error')
     
-    return redirect(url_for('admin.quizzes', user_id=request.args.get('user_id'))) 
+    # Rediriger vers la page précédente avec les paramètres de recherche
+    return redirect(request.referrer or url_for('admin.quizzes')) 
