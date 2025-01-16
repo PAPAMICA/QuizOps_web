@@ -253,7 +253,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-700">
-                    {% for result in history %}
+                    {% for result in history.items %}
                     <tr class="hover:bg-gray-700/50 transition-colors duration-150">
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             {% if ',' in result.category %}
@@ -267,19 +267,11 @@
                                 {% endfor %}
                             </div>
                             {% else %}
-                            <div class="flex items-center space-x-3">
                                 {% if categories[result.category] and categories[result.category].logo %}
-                                <div class="h-8 w-8 bg-gray-700 hover:bg-gray-600 transition-colors duration-150 rounded-lg p-1 flex items-center justify-center">
+                                <div class="h-8 w-8 bg-gray-700 rounded-lg p-1 flex items-center justify-center" title="{{ categories[result.category].name }}">
                                     <img src="{{ categories[result.category].logo }}" alt="{{ categories[result.category].name }}" class="h-6 w-6 object-contain">
                                 </div>
-                                <span class="text-gray-300">{{ categories[result.category].name }}</span>
-                                {% else %}
-                                <div class="h-8 w-8 rounded-lg bg-indigo-900/50 hover:bg-indigo-800/50 transition-colors duration-150 flex items-center justify-center">
-                                    <i class="fas fa-code text-indigo-400"></i>
-                                </div>
-                                <span class="text-gray-300">{{ result.category }}</span>
                                 {% endif %}
-                            </div>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ result.quiz_title }}</td>
@@ -321,6 +313,33 @@
                 </tbody>
             </table>
         </div>
+        {% if history.pages > 1 %}
+        <div class="px-6 py-4 border-t border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-400">
+                        Page {{ history.page }} of {{ history.pages }}
+                    </span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    {% if history.has_prev %}
+                    <a href="{{ url_for('main.profile', username=user.username, page=history.prev_num) }}"
+                       class="px-3 py-1 bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-colors duration-150 inline-flex items-center">
+                        <i class="fas fa-chevron-left mr-1"></i>
+                        Previous
+                    </a>
+                    {% endif %}
+                    {% if history.has_next %}
+                    <a href="{{ url_for('main.profile', username=user.username, page=history.next_num) }}"
+                       class="px-3 py-1 bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-colors duration-150 inline-flex items-center">
+                        Next
+                        <i class="fas fa-chevron-right ml-1"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
     {% else %}
     <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
