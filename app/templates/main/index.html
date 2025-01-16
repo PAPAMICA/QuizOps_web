@@ -17,45 +17,95 @@
             </div>
             <div class="relative p-8">
                 <img src="https://send.papamica.com/f.php?h=02XHWvX3&d=1" alt="QuizOps Logo" class="h-20 mb-8">
-                <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Welcome to QuizOps</h1>
-                <p class="mt-6 text-xl text-gray-300 max-w-3xl">
-                    Test your DevOps and IT knowledge with our interactive quizzes. Track your progress and improve your skills.
-                </p>
-                <div class="mt-4 text-lg text-gray-400">
-                    <span class="font-semibold text-indigo-400">{{ total_quizzes }}</span> quizzes available
-                </div>
-                {% if not current_user.is_authenticated %}
-                <div class="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                    <!-- Get Started -->
-                    <a href="{{ url_for('auth.register') }}"
-                        class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
-                        <i class="fas fa-user-plus mr-2"></i>
-                        Get Started
-                    </a>
-                    
-                    <!-- Sign In -->
-                    <a href="{{ url_for('auth.login') }}"
-                        class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-lg text-gray-300 bg-gray-800/50 hover:bg-gray-800 transition-colors duration-200">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        Sign In
-                    </a>
-                    
-                    <!-- Try Demo Quiz -->
-                    <a href="{{ url_for('quiz.demo_quiz') }}"
-                        class="demo-button w-full sm:w-auto flex justify-center items-center px-6 py-3 text-base font-medium rounded-lg relative group">
-                        <!-- Bordure animée -->
-                        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg animate-border"></div>
-                        <!-- Fond avec effet de glassmorphism -->
-                        <div class="absolute inset-[1px] bg-gray-900/90 rounded-lg backdrop-blur-xl"></div>
-                        <!-- Contenu -->
-                        <span class="relative z-10 flex items-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-indigo-100 group-hover:from-indigo-100 group-hover:to-white transition-all duration-300">
-                            <i class="fas fa-play mr-2"></i>
-                            Try a Demo Quiz
-                        </span>
-                        <!-- Effet de brillance au hover -->
-                        <div class="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"></div>
-                    </a>
-                </div>
+                {% if current_user.is_authenticated %}
+                    <div class="flex items-center mb-8">
+                        <div class="h-16 w-16 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30 mr-4">
+                            <i class="fas fa-user text-4xl text-indigo-400"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-4xl font-extrabold tracking-tight text-white">Welcome back, {{ current_user.username }}!</h1>
+                            <div class="mt-2 flex space-x-6 text-gray-300">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                                    <span>{{ stats.total_quizzes }} quizzes completed</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-chart-line text-indigo-400 mr-2"></i>
+                                    <span>{{ stats.avg_percentage }}% average score</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <!-- Select Quiz -->
+                        <a href="{{ url_for('quiz.list_quizzes') }}"
+                           class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
+                            <i class="fas fa-list-check mr-2"></i>
+                            Select a Quiz
+                        </a>
+                        
+                        <!-- Random Quiz -->
+                        <a href="{{ url_for('quiz.list_quizzes') }}?random=true"
+                           class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-lg text-gray-300 bg-gray-800/50 hover:bg-gray-800 transition-colors duration-200">
+                            <i class="fas fa-random mr-2"></i>
+                            Random Quiz
+                        </a>
+                        
+                        <!-- Share Profile -->
+                        <a href="{{ url_for('auth.profile', username=current_user.username) }}"
+                           class="w-full sm:w-auto flex justify-center items-center px-6 py-3 text-base font-medium rounded-lg relative group">
+                            <!-- Bordure animée -->
+                            <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg animate-border"></div>
+                            <!-- Fond avec effet de glassmorphism -->
+                            <div class="absolute inset-[1px] bg-gray-900/90 rounded-lg backdrop-blur-xl"></div>
+                            <!-- Contenu -->
+                            <span class="relative z-10 flex items-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-indigo-100 group-hover:from-indigo-100 group-hover:to-white transition-all duration-300">
+                                <i class="fas fa-share-alt mr-2"></i>
+                                Share My Profile
+                            </span>
+                            <!-- Effet de brillance au hover -->
+                            <div class="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"></div>
+                        </a>
+                    </div>
+                {% else %}
+                    <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Welcome to QuizOps</h1>
+                    <p class="mt-6 text-xl text-gray-300 max-w-3xl">
+                        Test your DevOps and IT knowledge with our interactive quizzes. Track your progress and improve your skills.
+                    </p>
+                    <div class="mt-4 text-lg text-gray-400">
+                        <span class="font-semibold text-indigo-400">{{ total_quizzes }}</span> quizzes available
+                    </div>
+                    <div class="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <!-- Get Started -->
+                        <a href="{{ url_for('auth.register') }}"
+                            class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            Get Started
+                        </a>
+                        
+                        <!-- Sign In -->
+                        <a href="{{ url_for('auth.login') }}"
+                            class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-lg text-gray-300 bg-gray-800/50 hover:bg-gray-800 transition-colors duration-200">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Sign In
+                        </a>
+                        
+                        <!-- Try Demo Quiz -->
+                        <a href="{{ url_for('quiz.demo_quiz') }}"
+                            class="demo-button w-full sm:w-auto flex justify-center items-center px-6 py-3 text-base font-medium rounded-lg relative group">
+                            <!-- Bordure animée -->
+                            <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg animate-border"></div>
+                            <!-- Fond avec effet de glassmorphism -->
+                            <div class="absolute inset-[1px] bg-gray-900/90 rounded-lg backdrop-blur-xl"></div>
+                            <!-- Contenu -->
+                            <span class="relative z-10 flex items-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-indigo-100 group-hover:from-indigo-100 group-hover:to-white transition-all duration-300">
+                                <i class="fas fa-play mr-2"></i>
+                                Try a Demo Quiz
+                            </span>
+                            <!-- Effet de brillance au hover -->
+                            <div class="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"></div>
+                        </a>
+                    </div>
                 {% endif %}
             </div>
         </div>
