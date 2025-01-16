@@ -245,11 +245,11 @@ def show_results(quiz_id):
 
         # Réorganiser les options dans l'ordre d'affichage original
         options = [''] * len(question['options'])
-
         for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
             new_idx = int(new_idx_str)
             old_idx = int(old_idx_str)
             options[new_idx] = question['options'][old_idx]
+
         q['options'] = options
 
         # Récupérer la réponse de l'utilisateur (déjà dans l'ordre mélangé)
@@ -270,10 +270,9 @@ def show_results(quiz_id):
                 'is_correct': is_correct
             }
 
-        # Convertir la réponse correcte pour l'affichage
-        q['correct_answer'] = int(mappings['original_to_shuffled'][str(question['correct_answer'])])
-
-        # Ajouter la source si elle existe
+        # Ajouter l'explication et la source si elles existent
+        if 'explanation' in question:
+            q['explanation'] = question['explanation']
         if 'source' in question:
             q['source'] = question['source']
 
@@ -283,8 +282,8 @@ def show_results(quiz_id):
             'is_correct': is_correct
         })
 
-    # Calculate score percentage, handling the case when total_questions is 0
-    score_percentage = round((correct_answers / total_questions) * 100) if total_questions > 0 else 0
+    # Calculate score percentage
+    score_percentage = round((correct_answers / total_questions) * 100)
 
     try:
         with session_manager() as db_session:
@@ -596,6 +595,12 @@ def show_demo_results(quiz_id):
             is_correct = original_user_answer == question['correct_answer']
             if is_correct:
                 correct_answers += 1
+
+        # Ajouter l'explication et la source si elles existent
+        if 'explanation' in question:
+            q['explanation'] = question['explanation']
+        if 'source' in question:
+            q['source'] = question['source']
         
         questions_with_answers.append({
             'question': q,
