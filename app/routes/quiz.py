@@ -37,7 +37,6 @@ def retry_on_db_lock(max_retries=3, delay=0.1):
     return decorator
 
 @bp.route('/quizzes')
-@login_required
 @set_locale
 def list_quizzes():
     """List all available quizzes"""
@@ -48,22 +47,24 @@ def list_quizzes():
     for category, config in categories:
         quizzes_by_category[category] = current_app.quiz_manager.get_quizzes_by_category(category)
 
-    # Get best scores for each quiz
+    # Get best scores for each quiz if user is authenticated
     best_scores = {}
-    for category in quizzes_by_category:
-        for quiz in quizzes_by_category[category]:
-            # Query the best score using QuizResult
-            best_score = QuizResult.query.filter_by(
-                user_id=current_user.id,
-                quiz_id=quiz['id']
-            ).order_by(QuizResult.score.desc()).first()
-            if best_score:
-                best_scores[quiz['id']] = best_score.percentage
+    if current_user.is_authenticated:
+        for category in quizzes_by_category:
+            for quiz in quizzes_by_category[category]:
+                # Query the best score using QuizResult
+                best_score = QuizResult.query.filter_by(
+                    user_id=current_user.id,
+                    quiz_id=quiz['id']
+                ).order_by(QuizResult.score.desc()).first()
+                if best_score:
+                    best_scores[quiz['id']] = best_score.percentage
 
     return render_template('quiz/list.html',
                          categories=categories,
                          quizzes_by_category=quizzes_by_category,
-                         best_scores=best_scores)
+                         best_scores=best_scores,
+                         is_authenticated=current_user.is_authenticated)
 
 @bp.route('/quiz/<quiz_id>')
 @login_required
