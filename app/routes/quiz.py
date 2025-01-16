@@ -158,7 +158,6 @@ def show_question(quiz_id, question_number):
                          question=question,
                          question_number=question_number,
                          total_questions=len(questions),
-                         is_demo=is_demo,
                          categories=current_app.config['CATEGORIES'])
 
 @bp.route('/quiz/<quiz_id>/question/<int:question_number>/answer', methods=['POST'])
