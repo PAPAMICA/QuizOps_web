@@ -356,9 +356,12 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(document.getElementById('scoreChart'), {
         type: 'line',
         data: {
-            labels: chartData.dates,
+            labels: chartData.dates.map(date => {
+                const [day, month, year] = date.split('/');
+                return `${day}/${month}`;
+            }),
             datasets: [{
-                label: 'Score',
+                label: 'Score (%)',
                 data: chartData.scores,
                 borderColor: 'rgb(129, 140, 248)',
                 backgroundColor: 'rgba(129, 140, 248, 0.1)',
@@ -390,9 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         display: false
                     },
                     ticks: {
-                        color: 'rgb(156, 163, 175)',
-                        maxRotation: 45,
-                        minRotation: 45
+                        color: 'rgb(156, 163, 175)'
                     }
                 }
             }
@@ -410,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return `${monthNames[parseInt(month) - 1]} ${year}`;
                 {% else %}
                 const [year, month, day] = date.split('-');
-                return day && month ? `${day}/${month}` : '';
+                return day && month ? `${day}/${month}` : 'N/A';
                 {% endif %}
             }),
             datasets: [{

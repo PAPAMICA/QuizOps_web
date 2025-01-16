@@ -245,6 +245,7 @@ def show_results(quiz_id):
 
         # Réorganiser les options dans l'ordre d'affichage original
         options = [''] * len(question['options'])
+
         for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
             new_idx = int(new_idx_str)
             old_idx = int(old_idx_str)
@@ -270,9 +271,10 @@ def show_results(quiz_id):
                 'is_correct': is_correct
             }
 
-        # Ajouter l'explication et la source si elles existent
-        if 'explanation' in question:
-            q['explanation'] = question['explanation']
+        # Convertir la réponse correcte pour l'affichage
+        q['correct_answer'] = int(mappings['original_to_shuffled'][str(question['correct_answer'])])
+
+        # Ajouter la source si elle existe
         if 'source' in question:
             q['source'] = question['source']
 
@@ -282,8 +284,8 @@ def show_results(quiz_id):
             'is_correct': is_correct
         })
 
-    # Calculate score percentage
-    score_percentage = round((correct_answers / total_questions) * 100)
+    # Handle case where there are no questions or all answers are wrong
+    score_percentage = round((correct_answers / total_questions) * 100) if total_questions > 0 else 0
 
     try:
         with session_manager() as db_session:
@@ -595,12 +597,6 @@ def show_demo_results(quiz_id):
             is_correct = original_user_answer == question['correct_answer']
             if is_correct:
                 correct_answers += 1
-
-        # Ajouter l'explication et la source si elles existent
-        if 'explanation' in question:
-            q['explanation'] = question['explanation']
-        if 'source' in question:
-            q['source'] = question['source']
         
         questions_with_answers.append({
             'question': q,
@@ -608,7 +604,7 @@ def show_demo_results(quiz_id):
             'is_correct': is_correct
         })
     
-    score_percentage = round((correct_answers / total_questions) * 100)
+    score_percentage = round((correct_answers / total_questions) * 100) if total_questions > 0 else 0
     
     # Clear demo session
     session.pop('is_demo', None)
