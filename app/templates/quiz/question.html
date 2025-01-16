@@ -48,17 +48,17 @@
             <div class="space-y-6">
                 <!-- Question text -->
                 <div class="bg-gray-700 p-4 rounded-lg border border-gray-600">
-                    <div class="flex items-start justify-between">
-                        <h2 class="text-lg font-medium text-gray-100 mb-4 flex-1">
-                            {{ question.question }}
-                        </h2>
+                    <div class="flex items-start space-x-4">
                         {% if question.category %}
-                        <div class="ml-4 flex-shrink-0">
-                            <div class="h-8 w-8 bg-gray-800 rounded-lg p-1.5 flex items-center justify-center">
+                        <div class="flex-shrink-0">
+                            <div class="h-12 w-12 bg-gray-800 rounded-lg p-2 flex items-center justify-center">
                                 <img src="{{ categories[question.category]['logo'] }}" alt="{{ question.category }}" class="h-full w-full object-contain">
                             </div>
                         </div>
                         {% endif %}
+                        <h2 class="text-lg font-medium text-gray-100 mb-4 flex-1">
+                            {{ question.question }}
+                        </h2>
                     </div>
 
                     <!-- Options -->
