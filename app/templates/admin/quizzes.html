@@ -3,13 +3,27 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-100">Quiz Results Management</h1>
-        <a href="{{ url_for('admin.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors duration-150">
-            <i class="fas fa-chart-bar mr-2"></i>Back to Dashboard
-        </a>
+        <h1 class="text-3xl font-bold text-gray-100">
+            {% if user_filter %}
+            Quiz History for {{ user_filter.username }}
+            {% else %}
+            Quiz Results Management
+            {% endif %}
+        </h1>
+        <div class="flex space-x-4">
+            {% if user_filter %}
+            <a href="{{ url_for('admin.users') }}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors duration-150">
+                <i class="fas fa-users mr-2"></i>Back to Users
+            </a>
+            {% endif %}
+            <a href="{{ url_for('admin.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors duration-150">
+                <i class="fas fa-chart-bar mr-2"></i>Back to Dashboard
+            </a>
+        </div>
     </div>
 
     <!-- Search Form -->
+    {% if not user_filter %}
     <div class="mb-8">
         <form action="{{ url_for('admin.quizzes') }}" method="get" class="flex items-center space-x-4">
             <div class="relative flex-1 max-w-lg">
@@ -34,6 +48,7 @@
             {% endif %}
         </form>
     </div>
+    {% endif %}
 
     <!-- Quiz Results Table -->
     <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden">

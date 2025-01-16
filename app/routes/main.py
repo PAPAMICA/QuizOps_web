@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, current_app, g, request, flash, redirect, url_for
+from flask import Blueprint, render_template, current_app, g, request
 from flask_login import current_user, login_required
 from sqlalchemy import func, desc, text, case, cast, Float
 from app.models import User, QuizResult
@@ -56,35 +56,45 @@ def index():
 
 @bp.route('/profile/<username>')
 def profile(username):
+    """Affiche le profil d'un utilisateur"""
     user = User.query.filter_by(username=username).first_or_404()
 
-    # If profile is private and current user is not the owner, show private message
-    if user.private_profile and (not current_user.is_authenticated or current_user.id != user.id):
-        flash('This profile is private.', 'error')
-        return redirect(url_for('main.index'))
+    # Récupérer l'historique complet des quiz
+    history = QuizResult.query.filter_by(user_id=user.id).order_by(QuizResult.completed_at.desc()).all()
 
-    # Get quiz results for the user (excluding custom quizzes)
-    quiz_results = (QuizResult.query
-                   .filter_by(user_id=user.id)
-                   .filter(~QuizResult.category.like('custom%'))  # Exclude custom quizzes
-                   .order_by(QuizResult.completed_at.desc())
-                   .all())
+    # Récupérer les configurations des catégories
+    categories = {}
+    for category, config in load_categories()[0]:
+        categories[category] = config
 
-    # Calculate statistics
-    total_quizzes = len(quiz_results)
-    perfect_scores = sum(1 for result in quiz_results if result.percentage == 100)
-    avg_score = sum(result.percentage for result in quiz_results) / total_quizzes if total_quizzes > 0 else 0
+    # Statistiques globales
+    total_quizzes = len(history)
+    total_score = sum(result.percentage for result in history) if history else 0
+    avg_score = round(total_score / total_quizzes, 1) if total_quizzes > 0 else 0.0
+    perfect_scores = sum(1 for result in history if result.percentage >= 100)
 
-    # Get time range for activity graph
-    time_range = request.args.get('time_range', '30days')
-    if time_range == '365days':
-        start_date = datetime.utcnow() - timedelta(days=365)
-        group_by = 'month'
-    else:  # 30days
-        start_date = datetime.utcnow() - timedelta(days=30)
-        group_by = 'day'
+    # Statistiques par catégorie
+    category_stats = {}
+    for result in history:
+        # Skip custom quizzes (those with multiple categories)
+        if ',' in result.category:
+            continue
+            
+        if result.category not in category_stats:
+            category_stats[result.category] = {
+                'count': 0,
+                'total_score': 0,
+                'best_score': 0
+            }
+        stats = category_stats[result.category]
+        stats['count'] += 1
+        stats['total_score'] += result.percentage
+        stats['best_score'] = max(stats['best_score'], result.percentage)
 
-    # Prepare chart data
+    for cat_stats in category_stats.values():
+        cat_stats['avg_score'] = round(cat_stats['total_score'] / cat_stats['count'], 1)
+
+    # Préparer les données pour le graphique des scores
     chart_data = {
         'dates': [],
         'scores': [],
@@ -92,88 +102,40 @@ def profile(username):
         'activity': {}
     }
 
-    # Initialize activity data
-    current_date = start_date
-    end_date = datetime.utcnow()
+    # Créer un dictionnaire pour compter les quiz par jour
+    if history:
+        # Définir la plage de dates (30 derniers jours)
+        end_date = datetime.utcnow().date()
+        start_date = end_date - timedelta(days=29)
+        current_date = start_date
 
-    if group_by == 'day':
+        # Initialiser tous les jours à 0
         while current_date <= end_date:
             chart_data['activity'][current_date.strftime('%Y-%m-%d')] = 0
             current_date += timedelta(days=1)
-    else:  # month
-        while current_date <= end_date:
-            chart_data['activity'][current_date.strftime('%Y-%m')] = 0
-            # Add one month
-            if current_date.month == 12:
-                current_date = current_date.replace(year=current_date.year + 1, month=1)
-            else:
-                current_date = current_date.replace(month=current_date.month + 1)
 
-    # Get the last 20 quiz results for the score chart
-    recent_results = sorted(quiz_results[:20], key=lambda x: x.completed_at)
-    for result in recent_results:
+        # Compter les quiz pour chaque jour
+        for result in history:
+            quiz_date = result.completed_at.date()
+            if start_date <= quiz_date <= end_date:
+                date_str = quiz_date.strftime('%Y-%m-%d')
+                chart_data['activity'][date_str] = chart_data['activity'].get(date_str, 0) + 1
+
+    # Données pour le graphique des scores (20 derniers quiz)
+    for result in sorted(history[-20:], key=lambda x: x.completed_at):
         chart_data['dates'].append(result.completed_at.strftime('%d/%m/%Y'))
         chart_data['scores'].append(float(result.percentage))
         chart_data['categories'].append(result.category)
 
-    # Fill activity data
-    for result in quiz_results:
-        if result.completed_at >= start_date:
-            if group_by == 'day':
-                date_key = result.completed_at.strftime('%Y-%m-%d')
-            else:
-                date_key = result.completed_at.strftime('%Y-%m')
-            chart_data['activity'][date_key] = chart_data['activity'].get(date_key, 0) + 1
-
-    # Load categories from quiz directory
-    quiz_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'QuizOps_quiz')
-    categories = {}
-    for category in os.listdir(quiz_dir):
-        category_path = os.path.join(quiz_dir, category)
-        if not os.path.isdir(category_path) or category.startswith('custom'):
-            continue
-
-        config_path = os.path.join(category_path, 'config.yml')
-        if os.path.isfile(config_path):
-            with open(config_path, 'r') as f:
-                config = yaml.safe_load(f) or {}
-                categories[category] = {
-                    'name': config.get('name', category.replace('_', ' ').title()),
-                    'description': config.get('description', ''),
-                    'logo': config.get('logo', ''),
-                    'color': config.get('color', 'gray')
-                }
-
-    # Calculate category statistics
-    category_stats = {}
-    for result in quiz_results:
-        # Skip custom quizzes for category stats
-        if ',' in result.category or result.category.startswith('custom'):
-            continue
-
-        if result.category not in category_stats:
-            category_stats[result.category] = {
-                'count': 0,
-                'total_score': 0,
-                'best_score': 0
-            }
-
-        stats = category_stats[result.category]
-        stats['count'] += 1
-        stats['total_score'] += result.percentage
-        stats['best_score'] = max(stats['best_score'], result.percentage)
-
     return render_template('auth/profile.html',
                          user=user,
-                         history=quiz_results[:10],  # Derniers 10 quiz
+                         history=history[-10:],  # Derniers 10 quiz
                          categories=categories,
                          category_stats=category_stats,
                          chart_data=chart_data,
                          total_quizzes=total_quizzes,
                          avg_score=avg_score,
-                         perfect_scores=perfect_scores,
-                         time_range=time_range,
-                         group_by=group_by)
+                         perfect_scores=perfect_scores)
 
 @bp.route('/leaderboard')
 def leaderboard():

@@ -181,33 +181,19 @@
         </div>
     </div>
 
-    <!-- Graphiques -->
+    <!-- Graphique des scores -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Activity Graph -->
         <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-200">Activity</h3>
-                <div class="flex space-x-2">
-                    <a href="{{ url_for('auth.profile', username=user.username, time_range='30days') }}"
-                       class="px-3 py-1 text-sm rounded-full {% if time_range == '30days' %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
-                        30 Days
-                    </a>
-                    <a href="{{ url_for('auth.profile', username=user.username, time_range='365days') }}"
-                       class="px-3 py-1 text-sm rounded-full {% if time_range == '365days' %}bg-indigo-600 text-white{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
-                        365 Days
-                    </a>
-                </div>
-            </div>
-            <div style="height: 250px;">
-                <canvas id="activityChart"></canvas>
+            <h2 class="text-xl font-semibold text-gray-200 mb-4">Score History</h2>
+            <div style="height: 300px;">
+                <canvas id="scoreChart"></canvas>
             </div>
         </div>
 
-        <!-- Score Chart -->
         <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-200 mb-4">Score History (Last 20 Quizzes)</h3>
-            <div style="height: 250px;">
-                <canvas id="scoreChart"></canvas>
+            <h2 class="text-xl font-semibold text-gray-200 mb-4">Quiz Activity</h2>
+            <div style="height: 300px;">
+                <canvas id="activityChart"></canvas>
             </div>
         </div>
     </div>
@@ -379,10 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new Chart(document.getElementById('scoreChart'), {
         type: 'line',
         data: {
-            labels: chartData.dates.map(date => {
-                const [day, month] = date.split('/');
-                return `${day}/${month}`;
-            }),
+            labels: chartData.dates,
             datasets: [{
                 label: 'Score',
                 data: chartData.scores,
@@ -397,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
             plugins: {
                 legend: {
                     display: false
@@ -434,6 +417,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         color: 'rgb(156, 163, 175)'
                     }
                 }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
             }
         }
     });
@@ -442,39 +429,41 @@ document.addEventListener('DOMContentLoaded', () => {
     new Chart(document.getElementById('activityChart'), {
         type: 'bar',
         data: {
-            labels: Object.keys(chartData.activity).map(date => {
-                const [year, month, day] = date.split('-');
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                if (!day) {
-                    return `${monthNames[parseInt(month) - 1]} ${year}`;
-                }
-                return `${day}/${month}`;
-            }),
+            labels: Object.keys(chartData.activity),
             datasets: [{
                 label: 'Quizzes Completed',
                 data: Object.values(chartData.activity),
-                backgroundColor: 'rgba(129, 140, 248, 0.2)',
+                backgroundColor: 'rgba(129, 140, 248, 0.5)',
                 borderColor: 'rgb(129, 140, 248)',
-                borderWidth: 1
+                borderWidth: 1,
+                borderRadius: 4
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const count = context.raw;
+                            return `${count} quiz${count !== 1 ? 'zes' : ''}`;
+                        }
+                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        color: 'rgb(156, 163, 175)'
-                    },
                     grid: {
                         color: 'rgba(75, 85, 99, 0.2)'
+                    },
+                    ticks: {
+                        color: 'rgb(156, 163, 175)',
+                        stepSize: 1
                     }
                 },
                 x: {
@@ -482,9 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         display: false
                     },
                     ticks: {
-                        color: 'rgb(156, 163, 175)',
-                        maxRotation: 45,
-                        minRotation: 45
+                        color: 'rgb(156, 163, 175)'
                     }
                 }
             }

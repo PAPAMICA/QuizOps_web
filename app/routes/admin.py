@@ -146,7 +146,7 @@ def quizzes():
 @admin_required
 def delete_quiz(quiz_id):
     try:
-        # Delete quiz result directly in DB
+        # Delete quiz result using direct SQL
         db.session.execute(
             "DELETE FROM quiz_result WHERE id = :quiz_id",
             {"quiz_id": quiz_id}
@@ -159,4 +159,18 @@ def delete_quiz(quiz_id):
         flash('An error occurred while deleting the quiz result.', 'error')
     
     # Rediriger vers la page précédente avec les paramètres de recherche
-    return redirect(request.referrer or url_for('admin.quizzes')) 
+    return redirect(request.referrer or url_for('admin.quizzes'))
+
+@bp.route('/user/<user_id>/quizzes')
+@login_required
+@admin_required
+def user_quizzes(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Récupérer tous les quiz de l'utilisateur
+    results = db.session.query(QuizResult).filter_by(user_id=user_id).order_by(QuizResult.completed_at.desc()).all()
+    
+    return render_template('admin/quizzes.html',
+                         results=[(result, user) for result in results],
+                         search_term='',
+                         user_filter=user) 
