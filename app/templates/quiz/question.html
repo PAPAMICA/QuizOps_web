@@ -48,7 +48,7 @@
             <div class="space-y-6">
                 <!-- Question text -->
                 <div class="bg-gray-700 p-4 rounded-lg border border-gray-600">
-                    <div class="flex items-start space-x-4">
+                    <div class="flex items-center space-x-4 mb-6">
                         {% if question.category %}
                         <div class="flex-shrink-0">
                             <div class="h-12 w-12 bg-gray-800 rounded-lg p-2 flex items-center justify-center">
@@ -56,23 +56,46 @@
                             </div>
                         </div>
                         {% endif %}
-                        <h2 class="text-lg font-medium text-gray-100 mb-4 flex-1">
+                        <h2 class="text-lg font-medium text-gray-100 flex-1">
                             {{ question.question }}
                         </h2>
                     </div>
 
                     <!-- Options -->
-                    <form id="question-form" action="{% if is_demo %}{{ url_for('quiz.answer_demo_question', quiz_id=quiz.id, question_number=question_number) }}{% else %}{{ url_for('quiz.answer_question', quiz_id=quiz.id, question_number=question_number) }}{% endif %}" method="post" class="space-y-3">
+                    <form id="question-form" action="{% if is_demo %}{{ url_for('quiz.answer_demo_question', quiz_id=quiz.id, question_number=question_number) }}{% else %}{{ url_for('quiz.answer_question', quiz_id=quiz.id, question_number=question_number) }}{% endif %}" method="post" class="space-y-4">
                         {% for option in question.options %}
-                        <label class="flex items-center p-4 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors duration-150 group">
-                            <input type="radio" name="answer" value="{{ loop.index0 }}" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 bg-gray-700">
-                            <span class="ml-3 text-gray-100 group-hover:text-gray-50">{{ option }}</span>
+                        <label class="block relative">
+                            <input type="radio" name="answer" value="{{ loop.index0 }}" class="peer sr-only">
+                            <div class="p-4 bg-gray-800 border-2 border-gray-600 rounded-lg cursor-pointer 
+                                      group hover:bg-gray-700/50 hover:border-gray-500
+                                      transition-all duration-200
+                                      peer-checked:border-indigo-500 peer-checked:bg-indigo-900/30
+                                      peer-checked:shadow-[0_0_15px_rgba(99,102,241,0.2)]
+                                      peer-focus:ring-2 peer-focus:ring-indigo-500/50">
+                                <div class="flex items-center">
+                                    <div class="relative h-5 w-5 flex-shrink-0 rounded-full mr-4
+                                                border-2 border-gray-500 group-hover:border-gray-400
+                                                peer-checked:border-indigo-500 peer-checked:bg-indigo-500/10
+                                                transition-colors duration-200
+                                                flex items-center justify-center">
+                                        <div class="absolute inset-0 rounded-full peer-checked:scale-100 scale-0
+                                                    transition-transform duration-200 transform">
+                                            <div class="absolute inset-0 rounded-full bg-indigo-500 scale-50"></div>
+                                        </div>
+                                    </div>
+                                    <span class="text-gray-100 text-lg group-hover:text-white transition-colors duration-200">{{ option }}</span>
+                                </div>
+                            </div>
                         </label>
                         {% endfor %}
 
-                        <div class="mt-6 flex justify-center">
+                        <div class="mt-8 flex justify-center">
                             <button type="submit"
-                                    class="inline-flex items-center px-8 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
+                                    class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium 
+                                           rounded-lg shadow-sm text-white bg-indigo-600 
+                                           hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/20
+                                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 
+                                           transform transition-all duration-200 hover:-translate-y-0.5">
                                 Submit Answer
                                 <i class="fas fa-arrow-right ml-2"></i>
                             </button>
