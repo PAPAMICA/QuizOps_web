@@ -42,6 +42,9 @@ def index():
         func.round(func.avg(QuizResult.score * 100.0 / QuizResult.max_score), 2).label('avg_score')
     ).join(QuizResult).group_by(User).order_by(func.count(QuizResult.id).desc()).limit(5).all()
 
+    # 10 derniers utilisateurs inscrits
+    recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
+
     return render_template('admin/index.html',
                          total_users=total_users,
                          total_quizzes=total_quizzes,
@@ -49,13 +52,14 @@ def index():
                          new_users_week=new_users_week,
                          quizzes_week=quizzes_week,
                          avg_score=avg_score,
-                         top_users=top_users)
+                         top_users=top_users,
+                         recent_users=recent_users)
 
 @bp.route('/users')
 @login_required
 @admin_required
 def users():
-    users = User.query.all()
+    users = User.query.order_by(User.created_at.desc()).all()
     return render_template('admin/users.html', users=users)
 
 @bp.route('/user/<user_id>/toggle-admin', methods=['POST'])
@@ -113,4 +117,47 @@ def delete_user(user_id):
             print(f"Error deleting user: {str(e)}")
             db.session.rollback()
             flash('An error occurred while deleting the user.', 'error')
-    return redirect(url_for('admin.users')) 
+    return redirect(url_for('admin.users'))
+
+@bp.route('/quizzes')
+@login_required
+@admin_required
+def quizzes():
+    # Get user filter
+    user_id = request.args.get('user_id')
+    
+    # Base query
+    query = db.session.query(
+        QuizResult,
+        User
+    ).join(User)
+    
+    # Apply user filter if provided
+    if user_id:
+        query = query.filter(QuizResult.user_id == user_id)
+    
+    # Get all users for the filter dropdown
+    users = User.query.order_by(User.username).all()
+    
+    # Get results ordered by completion date
+    results = query.order_by(QuizResult.completed_at.desc()).all()
+    
+    return render_template('admin/quizzes.html',
+                         results=results,
+                         users=users,
+                         selected_user_id=user_id)
+
+@bp.route('/quiz/<quiz_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_quiz(quiz_id):
+    quiz_result = QuizResult.query.get_or_404(quiz_id)
+    try:
+        db.session.delete(quiz_result)
+        db.session.commit()
+        flash('Quiz result deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error deleting quiz result.', 'error')
+    
+    return redirect(url_for('admin.quizzes', user_id=request.args.get('user_id'))) 

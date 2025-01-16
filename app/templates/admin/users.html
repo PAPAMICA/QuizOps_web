@@ -1,74 +1,91 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-100">User Management</h1>
-        <a href="{{ url_for('admin.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors duration-150">
-            <i class="fas fa-chart-bar mr-2"></i>Back to Dashboard
-        </a>
-    </div>
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-100">Users Management</h1>
+        </div>
 
-    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="bg-gray-800 shadow overflow-hidden border border-gray-700 sm:rounded-lg">
             <table class="min-w-full divide-y divide-gray-700">
                 <thead>
-                    <tr class="bg-gray-900/50">
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Username</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created At</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Username
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Email
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Registered
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Actions
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-700">
                     {% for user in users %}
-                    <tr class="hover:bg-gray-700/50 transition-colors duration-150">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                    <tr class="hover:bg-gray-700/50">
+                        <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="h-8 w-8 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30 mr-3">
-                                    <i class="fas fa-user text-indigo-400"></i>
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-indigo-600/30 flex items-center justify-center border border-indigo-500/30">
+                                        <i class="fas fa-user text-indigo-400"></i>
+                                    </div>
                                 </div>
-                                {{ user.username }}
+                                <div class="ml-4">
+                                    <a href="{{ url_for('auth.profile', username=user.username) }}" 
+                                       class="text-sm font-medium text-gray-100 hover:text-indigo-400">
+                                        {{ user.username }}
+                                    </a>
+                                </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ user.email }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            {% if user.email_verified %}
-                            <span class="px-2 py-1 bg-green-900/50 text-green-400 rounded-full text-sm">Verified</span>
-                            {% else %}
-                            <span class="px-2 py-1 bg-yellow-900/50 text-yellow-400 rounded-full text-sm">Pending</span>
-                            {% endif %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            {{ user.email }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            {% if user.is_admin %}
-                            <span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded-full text-sm">Admin</span>
-                            {% else %}
-                            <span class="px-2 py-1 bg-gray-900/50 text-gray-400 rounded-full text-sm">User</span>
-                            {% endif %}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                {% if user.email_verified %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-green-900/50 text-green-100 border border-green-700">
+                                    Verified
+                                </span>
+                                {% else %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-900/50 text-yellow-100 border border-yellow-700">
+                                    Pending
+                                </span>
+                                {% endif %}
+                                {% if user.is_admin %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-indigo-900/50 text-indigo-100 border border-indigo-700">
+                                    Admin
+                                </span>
+                                {% endif %}
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <div class="flex space-x-2">
-                                <form action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" method="POST" class="inline">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            {{ user.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <div class="flex justify-end space-x-2">
+                                {% if not user.is_admin or user != current_user %}
+                                <form action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" method="post" class="inline">
                                     <button type="submit" 
-                                            class="text-sm px-3 py-1 rounded transition-colors duration-150 {% if user.is_admin %}bg-purple-900/50 text-purple-400 hover:bg-purple-800/50{% else %}bg-indigo-900/50 text-indigo-400 hover:bg-indigo-800/50{% endif %}"
-                                            {% if user == current_user %}disabled{% endif %}>
-                                        {% if user.is_admin %}
-                                        <i class="fas fa-user-minus mr-1"></i>Remove Admin
-                                        {% else %}
-                                        <i class="fas fa-user-shield mr-1"></i>Make Admin
-                                        {% endif %}
+                                            class="text-indigo-400 hover:text-indigo-300"
+                                            title="{% if user.is_admin %}Remove admin rights{% else %}Grant admin rights{% endif %}">
+                                        <i class="fas {% if user.is_admin %}fa-user-minus{% else %}fa-user-plus{% endif %}"></i>
                                     </button>
                                 </form>
-                                <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                    <button type="submit" 
-                                            class="text-sm px-3 py-1 rounded bg-red-900/50 text-red-400 hover:bg-red-800/50 transition-colors duration-150"
-                                            {% if user == current_user %}disabled{% endif %}>
-                                        <i class="fas fa-trash-alt mr-1"></i>Delete
-                                    </button>
-                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('admin.quizzes', user_id=user.id) }}"
+                                   class="text-blue-400 hover:text-blue-300"
+                                   title="View user's quizzes">
+                                    <i class="fas fa-tasks"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
