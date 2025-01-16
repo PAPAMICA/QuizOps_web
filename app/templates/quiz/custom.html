@@ -8,7 +8,6 @@
             <p class="mt-2 text-gray-400">Create your own quiz by selecting technologies and difficulty level</p>
         </div>
 
-        {% if current_user.is_authenticated %}
         <form action="{{ url_for('quiz.create_custom_quiz') }}" method="POST" class="space-y-8">
             <div class="bg-gray-800 shadow-lg rounded-lg border border-gray-700 p-6">
                 <!-- Technologies Selection -->
@@ -24,7 +23,8 @@
                                 <input type="checkbox" 
                                        name="technologies[]" 
                                        value="{{ category }}"
-                                       class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800">
+                                       class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800"
+                                       {% if not current_user.is_authenticated %}disabled{% endif %}>
                             </div>
                             <div class="ml-3 flex items-center">
                                 {% if config.logo %}
@@ -44,7 +44,7 @@
                     </label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <label class="relative flex items-center p-4 rounded-lg border border-green-700/50 bg-green-900/20 cursor-pointer hover:bg-green-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-green-500">
-                            <input type="radio" name="level" value="beginner" class="sr-only peer" required>
+                            <input type="radio" name="level" value="beginner" class="sr-only peer" required {% if not current_user.is_authenticated %}disabled{% endif %}>
                             <div class="flex items-center">
                                 <div class="h-4 w-4 rounded-full border-2 border-green-500 flex items-center justify-center peer-checked:bg-green-500">
                                     <div class="h-2 w-2 rounded-full bg-green-500 opacity-0 peer-checked:opacity-100"></div>
@@ -53,7 +53,7 @@
                             </div>
                         </label>
                         <label class="relative flex items-center p-4 rounded-lg border border-blue-700/50 bg-blue-900/20 cursor-pointer hover:bg-blue-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-blue-500">
-                            <input type="radio" name="level" value="intermediate" class="sr-only peer" required>
+                            <input type="radio" name="level" value="intermediate" class="sr-only peer" required {% if not current_user.is_authenticated %}disabled{% endif %}>
                             <div class="flex items-center">
                                 <div class="h-4 w-4 rounded-full border-2 border-blue-500 flex items-center justify-center peer-checked:bg-blue-500">
                                     <div class="h-2 w-2 rounded-full bg-blue-500 opacity-0 peer-checked:opacity-100"></div>
@@ -62,7 +62,7 @@
                             </div>
                         </label>
                         <label class="relative flex items-center p-4 rounded-lg border border-purple-700/50 bg-purple-900/20 cursor-pointer hover:bg-purple-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-purple-500">
-                            <input type="radio" name="level" value="advanced" class="sr-only peer" required>
+                            <input type="radio" name="level" value="advanced" class="sr-only peer" required {% if not current_user.is_authenticated %}disabled{% endif %}>
                             <div class="flex items-center">
                                 <div class="h-4 w-4 rounded-full border-2 border-purple-500 flex items-center justify-center peer-checked:bg-purple-500">
                                     <div class="h-2 w-2 rounded-full bg-purple-500 opacity-0 peer-checked:opacity-100"></div>
@@ -71,7 +71,7 @@
                             </div>
                         </label>
                         <label class="relative flex items-center p-4 rounded-lg border border-red-700/50 bg-red-900/20 cursor-pointer hover:bg-red-900/30 transition-all duration-150 peer-checked:ring-2 peer-checked:ring-red-500">
-                            <input type="radio" name="level" value="expert" class="sr-only peer" required>
+                            <input type="radio" name="level" value="expert" class="sr-only peer" required {% if not current_user.is_authenticated %}disabled{% endif %}>
                             <div class="flex items-center">
                                 <div class="h-4 w-4 rounded-full border-2 border-red-500 flex items-center justify-center peer-checked:bg-red-500">
                                     <div class="h-2 w-2 rounded-full bg-red-500 opacity-0 peer-checked:opacity-100"></div>
@@ -85,27 +85,21 @@
 
             <!-- Submit Button -->
             <div class="flex justify-center">
+                {% if current_user.is_authenticated %}
                 <button type="submit"
                         class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
                     <i class="fas fa-magic mr-2"></i>
                     Generate Custom Quiz
                 </button>
-            </div>
-        </form>
-        {% else %}
-        <div class="bg-gray-800 shadow-lg rounded-lg border border-gray-700 p-6">
-            <div class="text-center">
-                <i class="fas fa-lock text-4xl text-gray-500 mb-4"></i>
-                <h2 class="text-xl font-semibold text-gray-100 mb-2">Login Required</h2>
-                <p class="text-gray-400 mb-6">You need to be logged in to create and take custom quizzes.</p>
+                {% else %}
                 <a href="{{ url_for('auth.login') }}"
                    class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
                     <i class="fas fa-sign-in-alt mr-2"></i>
-                    Login to Create Custom Quizzes
+                    Login to Create Quiz
                 </a>
+                {% endif %}
             </div>
-        </div>
-        {% endif %}
+        </form>
     </div>
 </div>
 

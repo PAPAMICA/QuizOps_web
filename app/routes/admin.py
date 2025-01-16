@@ -42,9 +42,6 @@ def index():
         func.round(func.avg(QuizResult.score * 100.0 / QuizResult.max_score), 2).label('avg_score')
     ).join(QuizResult).group_by(User).order_by(func.count(QuizResult.id).desc()).limit(5).all()
 
-    # 10 derniers utilisateurs inscrits
-    recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
-
     return render_template('admin/index.html',
                          total_users=total_users,
                          total_quizzes=total_quizzes,
@@ -52,15 +49,13 @@ def index():
                          new_users_week=new_users_week,
                          quizzes_week=quizzes_week,
                          avg_score=avg_score,
-                         top_users=top_users,
-                         recent_users=recent_users)
+                         top_users=top_users)
 
 @bp.route('/users')
 @login_required
 @admin_required
 def users():
-    # Trier les utilisateurs par date d'inscription (plus récent en premier)
-    users = User.query.order_by(User.created_at.desc()).all()
+    users = User.query.all()
     return render_template('admin/users.html', users=users)
 
 @bp.route('/user/<user_id>/toggle-admin', methods=['POST'])
@@ -118,59 +113,4 @@ def delete_user(user_id):
             print(f"Error deleting user: {str(e)}")
             db.session.rollback()
             flash('An error occurred while deleting the user.', 'error')
-    return redirect(url_for('admin.users'))
-
-@bp.route('/quizzes')
-@login_required
-@admin_required
-def quizzes():
-    # Récupérer le terme de recherche
-    search_term = request.args.get('search', '')
-    
-    # Base query pour les résultats de quiz
-    query = db.session.query(QuizResult, User).join(User)
-    
-    # Appliquer le filtre de recherche si présent
-    if search_term:
-        query = query.filter(User.username.ilike(f'%{search_term}%'))
-    
-    # Récupérer les résultats triés par date
-    results = query.order_by(QuizResult.completed_at.desc()).all()
-    
-    return render_template('admin/quizzes.html', 
-                         results=results,
-                         search_term=search_term)
-
-@bp.route('/quiz/<quiz_id>/delete', methods=['POST'])
-@login_required
-@admin_required
-def delete_quiz(quiz_id):
-    try:
-        # Delete quiz result using direct SQL
-        db.session.execute(
-            "DELETE FROM quiz_result WHERE id = :quiz_id",
-            {"quiz_id": quiz_id}
-        )
-        db.session.commit()
-        flash('Quiz result deleted successfully.', 'success')
-    except Exception as e:
-        print(f"Error deleting quiz result: {str(e)}")
-        db.session.rollback()
-        flash('An error occurred while deleting the quiz result.', 'error')
-    
-    # Rediriger vers la page précédente avec les paramètres de recherche
-    return redirect(request.referrer or url_for('admin.quizzes'))
-
-@bp.route('/user/<user_id>/quizzes')
-@login_required
-@admin_required
-def user_quizzes(user_id):
-    user = User.query.get_or_404(user_id)
-    
-    # Récupérer tous les quiz de l'utilisateur
-    results = db.session.query(QuizResult).filter_by(user_id=user_id).order_by(QuizResult.completed_at.desc()).all()
-    
-    return render_template('admin/quizzes.html',
-                         results=[(result, user) for result in results],
-                         search_term='',
-                         user_filter=user) 
+    return redirect(url_for('admin.users')) 

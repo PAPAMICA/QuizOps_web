@@ -138,6 +138,7 @@ def profile(username):
                          perfect_scores=perfect_scores)
 
 @bp.route('/leaderboard')
+@login_required
 def leaderboard():
     # Get time filter
     time_filter = request.args.get('time', 'all')

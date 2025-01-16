@@ -13,6 +13,7 @@
                            class="w-64 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                     <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
                 </div>
+                {% if current_user.is_authenticated %}
                 <div class="flex items-center space-x-2">
                     <label class="text-sm text-gray-400">Show completed:</label>
                     <input type="checkbox" 
@@ -20,6 +21,7 @@
                            checked
                            class="rounded bg-gray-800 border-gray-700 text-indigo-600 focus:ring-indigo-500">
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -77,7 +79,7 @@
                                     {% endif %}">
                                     {{ quiz.level }}
                                 </span>
-                                {% if quiz.id in best_scores %}
+                                {% if current_user.is_authenticated and quiz.id in best_scores %}
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                     {% if best_scores[quiz.id] >= 80 %}bg-green-900 text-green-100
                                     {% elif best_scores[quiz.id] >= 50 %}bg-yellow-900 text-yellow-100
@@ -87,27 +89,26 @@
                                 {% endif %}
                             </div>
                             <div class="flex space-x-2">
-                                {% if quiz.id in best_scores %}
-                                <a href="{{ url_for('quiz.show_history', quiz_id=quiz.id) }}"
-                                   class="inline-flex items-center px-3 py-1.5 border border-gray-600 shadow-sm text-xs font-medium rounded text-gray-300 bg-gray-700 hover:bg-gray-600">
-                                    <i class="fas fa-history mr-1"></i>
-                                    History
-                                </a>
-                                {% endif %}
                                 {% if current_user.is_authenticated %}
-                                <form action="{{ url_for('quiz.start_quiz', quiz_id=quiz.id) }}" method="post" class="inline">
-                                    <button type="submit"
-                                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                                        <i class="fas fa-play mr-1"></i>
-                                        Start
-                                    </button>
-                                </form>
+                                    {% if quiz.id in best_scores %}
+                                    <a href="{{ url_for('quiz.show_history', quiz_id=quiz.id) }}"
+                                       class="inline-flex items-center px-3 py-1.5 border border-gray-600 shadow-sm text-xs font-medium rounded text-gray-300 bg-gray-700 hover:bg-gray-600">
+                                        <i class="fas fa-history mr-1"></i>
+                                        History
+                                    </a>
+                                    {% endif %}
+                                    <form action="{{ url_for('quiz.start_quiz', quiz_id=quiz.id) }}" method="post" class="inline">
+                                        <button type="submit"
+                                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                                            <i class="fas fa-play mr-1"></i>
+                                            Start
+                                        </button>
+                                    </form>
                                 {% else %}
-                                <a href="{{ url_for('auth.login') }}"
-                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                                    <i class="fas fa-sign-in-alt mr-1"></i>
-                                    Login to Start
-                                </a>
+                                    <a href="{{ url_for('auth.login') }}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                                        <i class="fas fa-sign-in-alt mr-1"></i>
+                                        Login to Start
+                                    </a>
                                 {% endif %}
                             </div>
                         </div>
@@ -132,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fonction de filtrage
     function filterQuizzes() {
         const searchTerm = searchInput.value.toLowerCase();
-        const showCompleted = showCompletedCheckbox.checked;
+        const showCompleted = showCompletedCheckbox ? showCompletedCheckbox.checked : true;
         
         quizCards.forEach(card => {
             const title = card.dataset.title;
@@ -161,7 +162,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gestionnaires d'événements
     searchInput.addEventListener('input', filterQuizzes);
-    showCompletedCheckbox.addEventListener('change', filterQuizzes);
+    if (showCompletedCheckbox) {
+        showCompletedCheckbox.addEventListener('change', filterQuizzes);
+    }
     
     levelFilters.forEach(button => {
         button.addEventListener('click', () => {
