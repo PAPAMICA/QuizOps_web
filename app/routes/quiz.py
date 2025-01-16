@@ -229,11 +229,24 @@ def show_results(quiz_id):
         return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
 
     # Récupérer les questions dans l'ordre où elles ont été présentées
-    questions = flask_session.get('questions', [])
+    questions_order = flask_session.get('questions_order', [])
+    if not questions_order:
+        return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
+
+    # Récupérer les questions dans l'ordre correct
+    questions = []
+    for question_id in questions_order:
+        for q in quiz['questions']:
+            if str(q.get('id')) == str(question_id):
+                questions.append(q)
+                break
 
     # Calculer le score
     correct_answers = 0
     total_questions = len(questions)
+    
+    if total_questions == 0:
+        return redirect(url_for('quiz.show_quiz', quiz_id=quiz_id))
 
     # Préparer les questions avec leurs réponses pour l'affichage
     questions_with_answers = []
@@ -245,17 +258,16 @@ def show_results(quiz_id):
 
         # Réorganiser les options dans l'ordre d'affichage original
         options = [''] * len(question['options'])
-
         for new_idx_str, old_idx_str in mappings['shuffled_to_original'].items():
             new_idx = int(new_idx_str)
             old_idx = int(old_idx_str)
             options[new_idx] = question['options'][old_idx]
-
+        
         q['options'] = options
-
+        
         # Récupérer la réponse de l'utilisateur (déjà dans l'ordre mélangé)
         user_answer = answers.get(str(i))
-
+        
         # Vérifier si la réponse est correcte en utilisant les indices originaux
         is_correct = False
         if user_answer is not None:
@@ -263,21 +275,23 @@ def show_results(quiz_id):
             is_correct = original_user_answer == question['correct_answer']
             if is_correct:
                 correct_answers += 1
-
+            
             # Stocker la réponse pour la base de données
             answers_data[question['id']] = {
                 'user_answer': original_user_answer,
                 'correct_answer': question['correct_answer'],
                 'is_correct': is_correct
             }
-
+        
         # Convertir la réponse correcte pour l'affichage
         q['correct_answer'] = int(mappings['original_to_shuffled'][str(question['correct_answer'])])
-
-        # Ajouter la source si elle existe
+        
+        # Ajouter l'explication et la source
+        if 'explanation' in question:
+            q['explanation'] = question['explanation']
         if 'source' in question:
             q['source'] = question['source']
-
+        
         questions_with_answers.append({
             'question': q,
             'user_answer': user_answer,  # Déjà dans l'ordre mélangé

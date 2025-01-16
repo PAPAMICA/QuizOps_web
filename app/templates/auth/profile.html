@@ -443,14 +443,12 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'bar',
         data: {
             labels: Object.keys(chartData.activity).map(date => {
-                {% if group_by == 'month' %}
-                const [year, month] = date.split('-');
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                return `${monthNames[parseInt(month) - 1]} ${year}`;
-                {% else %}
                 const [year, month, day] = date.split('-');
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                if (!day) {
+                    return `${monthNames[parseInt(month) - 1]} ${year}`;
+                }
                 return `${day}/${month}`;
-                {% endif %}
             }),
             datasets: [{
                 label: 'Quizzes Completed',
