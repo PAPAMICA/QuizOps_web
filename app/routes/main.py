@@ -59,14 +59,8 @@ def profile(username):
     """Affiche le profil d'un utilisateur"""
     user = User.query.filter_by(username=username).first_or_404()
 
-    # Récupérer le numéro de page depuis les paramètres de requête
-    page = request.args.get('page', 1, type=int)
-    per_page = 10  # Nombre de quiz par page
-
-    # Récupérer l'historique paginé des quiz
-    history_query = QuizResult.query.filter_by(user_id=user.id).order_by(QuizResult.completed_at.desc())
-    history_paginated = history_query.paginate(page=page, per_page=per_page, error_out=False)
-    history_all = history_query.all()  # Pour les statistiques
+    # Récupérer l'historique complet des quiz
+    history = QuizResult.query.filter_by(user_id=user.id).order_by(QuizResult.completed_at.desc()).all()
 
     # Récupérer les configurations des catégories
     categories = {}
@@ -74,14 +68,14 @@ def profile(username):
         categories[category] = config
 
     # Statistiques globales
-    total_quizzes = len(history_all)
-    total_score = sum(result.percentage for result in history_all) if history_all else 0
+    total_quizzes = len(history)
+    total_score = sum(result.percentage for result in history) if history else 0
     avg_score = round(total_score / total_quizzes, 1) if total_quizzes > 0 else 0.0
-    perfect_scores = sum(1 for result in history_all if result.percentage >= 100)
+    perfect_scores = sum(1 for result in history if result.percentage >= 100)
 
     # Statistiques par catégorie
     category_stats = {}
-    for result in history_all:
+    for result in history:
         # Skip custom quizzes (those with multiple categories)
         if ',' in result.category:
             continue
@@ -109,7 +103,7 @@ def profile(username):
     }
 
     # Créer un dictionnaire pour compter les quiz par jour
-    if history_all:
+    if history:
         # Définir la plage de dates (30 derniers jours)
         end_date = datetime.utcnow().date()
         start_date = end_date - timedelta(days=29)
@@ -121,21 +115,21 @@ def profile(username):
             current_date += timedelta(days=1)
 
         # Compter les quiz pour chaque jour
-        for result in history_all:
+        for result in history:
             quiz_date = result.completed_at.date()
             if start_date <= quiz_date <= end_date:
                 date_str = quiz_date.strftime('%Y-%m-%d')
                 chart_data['activity'][date_str] = chart_data['activity'].get(date_str, 0) + 1
 
     # Données pour le graphique des scores (20 derniers quiz)
-    for result in sorted(history_all[-20:], key=lambda x: x.completed_at):
+    for result in sorted(history[-20:], key=lambda x: x.completed_at):
         chart_data['dates'].append(result.completed_at.strftime('%d/%m/%Y'))
         chart_data['scores'].append(float(result.percentage))
         chart_data['categories'].append(result.category)
 
     return render_template('auth/profile.html',
                          user=user,
-                         history=history_paginated,  # Utiliser la pagination
+                         history=history,
                          categories=categories,
                          category_stats=category_stats,
                          chart_data=chart_data,
