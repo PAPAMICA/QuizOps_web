@@ -607,3 +607,76 @@ def show_demo_results(quiz_id):
                          correct_answers=correct_answers,
                          total_questions=total_questions,
                          is_demo=True)
+
+@bp.route('/random')
+@login_required
+@set_locale
+def random_quiz():
+    """Lance un quiz aléatoire que l'utilisateur n'a pas encore complété"""
+    # Récupérer tous les quiz disponibles
+    all_quizzes = current_app.quiz_manager.get_quiz_list()
+    
+    # Récupérer les IDs des quiz déjà complétés par l'utilisateur
+    completed_quiz_ids = set(
+        result.quiz_id for result in 
+        QuizResult.query.filter_by(user_id=current_user.id).all()
+    )
+    
+    # Filtrer les quiz non complétés
+    available_quizzes = [
+        quiz for quiz in all_quizzes 
+        if quiz['id'] not in completed_quiz_ids and not quiz['is_custom']
+    ]
+    
+    if not available_quizzes:
+        # Si tous les quiz ont été complétés, prendre n'importe quel quiz non personnalisé
+        available_quizzes = [quiz for quiz in all_quizzes if not quiz['is_custom']]
+    
+    if not available_quizzes:
+        flash('No quizzes available.', 'error')
+        return redirect(url_for('quiz.list_quizzes'))
+    
+    # Sélectionner un quiz aléatoire
+    random_quiz = random.choice(available_quizzes)
+    quiz_id = random_quiz['id']
+    
+    # Récupérer le quiz complet
+    quiz = current_app.quiz_manager.get_quiz(quiz_id)
+    if not quiz:
+        flash('Quiz not found.', 'error')
+        return redirect(url_for('quiz.list_quizzes'))
+
+    # Mélanger les questions
+    questions = quiz.get('questions', [])
+    if not questions:
+        flash('No questions found in this quiz.', 'error')
+        return redirect(url_for('quiz.list_quizzes'))
+
+    random.shuffle(questions)
+    session['questions'] = questions
+    session['current_quiz'] = quiz_id
+    session['current_question'] = 1
+    session['answers'] = {}
+    session['shuffled_options'] = {}
+
+    # Mélanger les options pour chaque question
+    shuffled_options = {}
+    for i, question in enumerate(questions, 1):
+        num_options = len(question['options'])
+        original_indices = list(range(num_options))
+        shuffled_indices = original_indices.copy()
+        random.shuffle(shuffled_indices)
+        
+        # Créer les mappings pour retrouver les indices originaux
+        shuffled_to_original = {str(new): str(old) for new, old in zip(range(num_options), shuffled_indices)}
+        original_to_shuffled = {str(old): str(new) for new, old in zip(range(num_options), shuffled_indices)}
+        
+        shuffled_options[str(i)] = {
+            'shuffled_to_original': shuffled_to_original,
+            'original_to_shuffled': original_to_shuffled
+        }
+    
+    session['shuffled_options'] = shuffled_options
+
+    # Rediriger vers la première question
+    return redirect(url_for('quiz.show_question', quiz_id=quiz_id, question_number=1))

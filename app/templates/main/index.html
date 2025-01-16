@@ -43,14 +43,14 @@
                             <i class="fas fa-list-check mr-2"></i>
                             Select a Quiz
                         </a>
-                        
+
                         <!-- Random Quiz -->
-                        <a href="{{ url_for('quiz.list_quizzes') }}?random=true"
+                        <a href="{{ url_for('quiz.random_quiz') }}"
                            class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-lg text-gray-300 bg-gray-800/50 hover:bg-gray-800 transition-colors duration-200">
                             <i class="fas fa-random mr-2"></i>
                             Random Quiz
                         </a>
-                        
+
                         <!-- Share Profile -->
                         <a href="{{ url_for('auth.profile', username=current_user.username) }}"
                            class="w-full sm:w-auto flex justify-center items-center px-6 py-3 text-base font-medium rounded-lg relative group">
@@ -82,14 +82,14 @@
                             <i class="fas fa-user-plus mr-2"></i>
                             Get Started
                         </a>
-                        
+
                         <!-- Sign In -->
                         <a href="{{ url_for('auth.login') }}"
                             class="w-full sm:w-auto flex justify-center items-center px-6 py-3 border border-gray-600 text-base font-medium rounded-lg text-gray-300 bg-gray-800/50 hover:bg-gray-800 transition-colors duration-200">
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Sign In
                         </a>
-                        
+
                         <!-- Try Demo Quiz -->
                         <a href="{{ url_for('quiz.demo_quiz') }}"
                             class="demo-button w-full sm:w-auto flex justify-center items-center px-6 py-3 text-base font-medium rounded-lg relative group">
@@ -155,8 +155,6 @@
 </div>
 
 {% if current_user.is_authenticated %}
-<!-- Rest of the authenticated user content -->
-{% include "main/_authenticated.html" %}
 {% else %}
 <!-- Rest of the features section -->
 {% include "main/_features.html" %}
@@ -237,4 +235,4 @@
     animation: pulse-glow 2s ease-in-out infinite;
 }
 </style>
-{% endblock %} 
+{% endblock %}
