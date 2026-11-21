@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app.models.user import User, QuizResult
 from app import db
 from functools import wraps
-from sqlalchemy import func
+from sqlalchemy import func, text
 from datetime import datetime, timedelta
 from sqlalchemy.sql import case
 
@@ -115,13 +115,13 @@ def toggle_admin(user_id):
         try:
             # Toggle admin status using direct SQL
             db.session.execute(
-                "UPDATE \"user\" SET is_admin = NOT is_admin WHERE id = :user_id RETURNING is_admin",
+                text("UPDATE \"user\" SET is_admin = NOT is_admin WHERE id = :user_id RETURNING is_admin"),
                 {"user_id": user_id}
             )
             db.session.commit()
             # Get the updated status
             new_status = db.session.execute(
-                "SELECT is_admin FROM \"user\" WHERE id = :user_id",
+                text("SELECT is_admin FROM \"user\" WHERE id = :user_id"),
                 {"user_id": user_id}
             ).scalar()
             flash(f'Admin status for {user.username} has been {"granted" if new_status else "revoked"}.', 'success')
@@ -144,12 +144,12 @@ def delete_user(user_id):
             username = user.username
             # Delete quiz results first
             db.session.execute(
-                "DELETE FROM quiz_result WHERE user_id = :user_id",
+                text("DELETE FROM quiz_result WHERE user_id = :user_id"),
                 {"user_id": user_id}
             )
             # Then delete the user
             db.session.execute(
-                "DELETE FROM \"user\" WHERE id = :user_id",
+                text("DELETE FROM \"user\" WHERE id = :user_id"),
                 {"user_id": user_id}
             )
             db.session.commit()
@@ -189,7 +189,7 @@ def delete_quiz_result(result_id):
     try:
         # Supprimer directement en base de données
         db.session.execute(
-            "DELETE FROM quiz_result WHERE id = :result_id",
+            text("DELETE FROM quiz_result WHERE id = :result_id"),
             {"result_id": result_id}
         )
         db.session.commit()

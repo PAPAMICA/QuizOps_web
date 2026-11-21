@@ -4,6 +4,7 @@ from flask import Blueprint
 from app.routes.main import bp as main_bp
 from app.routes.auth import bp as auth_bp
 from app.routes.quiz import bp as quiz_bp
+from app.routes.admin import bp as admin_bp
 
 # Créer le blueprint principal
 bp = Blueprint('main', __name__)
@@ -12,4 +13,5 @@ bp = Blueprint('main', __name__)
 def init_app(app):
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(quiz_bp, url_prefix='/quiz') 
+    app.register_blueprint(quiz_bp, url_prefix='/quiz')
+    app.register_blueprint(admin_bp) 

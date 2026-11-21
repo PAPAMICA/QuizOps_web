@@ -1,9 +1,11 @@
 import os
 from datetime import timedelta
 
+_database_url = os.environ.get('DATABASE_URL') or 'sqlite:///quiz.db'
+
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change-in-production'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///quiz.db'
+    SQLALCHEMY_DATABASE_URI = _database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     QUIZ_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app', 'quiz_data')
     PERMANENT_SESSION_LIFETIME = timedelta(days=31)
@@ -16,21 +18,25 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
 
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 100,
-        'max_overflow': 50,
-        'pool_timeout': 30,
-        'pool_recycle': 300,
-        'pool_pre_ping': True,
-        'pool_use_lifo': True,
-        'echo_pool': True,
-        'connect_args': {
-            'connect_timeout': 10,
-            'application_name': 'quizops',
-            'keepalives': 1,
-            'keepalives_idle': 30,
-            'keepalives_interval': 10,
-            'keepalives_count': 5,
-            'options': '-c statement_timeout=30000'
+    # Postgres pool options are invalid for the default SQLite URI.
+    if _database_url.startswith('sqlite'):
+        SQLALCHEMY_ENGINE_OPTIONS = {}
+    else:
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_size': 100,
+            'max_overflow': 50,
+            'pool_timeout': 30,
+            'pool_recycle': 300,
+            'pool_pre_ping': True,
+            'pool_use_lifo': True,
+            'echo_pool': True,
+            'connect_args': {
+                'connect_timeout': 10,
+                'application_name': 'quizops',
+                'keepalives': 1,
+                'keepalives_idle': 30,
+                'keepalives_interval': 10,
+                'keepalives_count': 5,
+                'options': '-c statement_timeout=30000'
+            }
         }
-    }
