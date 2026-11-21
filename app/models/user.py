@@ -34,7 +34,8 @@ class User(UserMixin, db.Model):
     dev_to_username = db.Column(db.String(64))
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        # Werkzeug 3 defaults to scrypt, whose hash is longer than VARCHAR(128).
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)

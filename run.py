@@ -1,9 +1,16 @@
+import os
+
 from app import create_app, db
 from app.models import User, QuizResult
 from flask_migrate import Migrate
 
 app = create_app()
 migrate = Migrate(app, db)
+
+
+def _debug_enabled():
+    """Debug stays off unless FLASK_DEBUG is explicitly turned on."""
+    return os.environ.get('FLASK_DEBUG', '').strip().lower() in {'1', 'true', 'yes', 'on'}
 
 @app.cli.command()
 def init_db():
@@ -24,4 +31,4 @@ if __name__ == '__main__':
             print('Database initialized successfully.')
         except Exception as e:
             print(f'Error initializing database: {e}')
-    app.run(debug=True, port=8080, host='0.0.0.0')
+    app.run(debug=_debug_enabled(), port=8080, host='0.0.0.0')

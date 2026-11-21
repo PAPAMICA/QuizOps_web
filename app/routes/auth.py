@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.models.user import User, QuizResult
 from app import db, mail
 from urllib.parse import urlparse
+from sqlalchemy import text
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.forms import LoginForm, RegistrationForm, RequestPasswordResetForm, ResetPasswordForm
 from flask_mail import Message
@@ -297,9 +298,9 @@ def settings():
                     flash('Current password is incorrect.', 'error')
                 else:
                     # Update password hash directly in the database
-                    password_hash = generate_password_hash(new_password)
+                    password_hash = generate_password_hash(new_password, method='pbkdf2:sha256')
                     db.session.execute(
-                        "UPDATE \"user\" SET password_hash = :password_hash WHERE id = :user_id",
+                        text("UPDATE \"user\" SET password_hash = :password_hash WHERE id = :user_id"),
                         {"password_hash": password_hash, "user_id": current_user.id}
                     )
                     db.session.commit()
@@ -336,7 +337,7 @@ def settings():
 
                     # Update directly in the database
                     db.session.execute(
-                        "UPDATE \"user\" SET username = :username WHERE id = :user_id",
+                        text("UPDATE \"user\" SET username = :username WHERE id = :user_id"),
                         {"username": new_username, "user_id": current_user.id}
                     )
                     db.session.commit()
@@ -452,7 +453,7 @@ def update_profile_privacy():
 
         # Update directly in the database
         db.session.execute(
-            "UPDATE \"user\" SET private_profile = :private_profile WHERE id = :user_id",
+            text("UPDATE \"user\" SET private_profile = :private_profile WHERE id = :user_id"),
             {"private_profile": private_profile, "user_id": current_user.id}
         )
         db.session.commit()
@@ -495,7 +496,7 @@ def update_social_media():
             twitter = twitter[1:]
 
         # Update directly in the database
-        db.session.execute("""
+        db.session.execute(text("""
             UPDATE "user" SET
                 twitter_username = :twitter,
                 bluesky_handle = :bluesky,
@@ -508,7 +509,7 @@ def update_social_media():
                 medium_username = :medium,
                 dev_to_username = :dev_to
             WHERE id = :user_id
-        """, {
+        """), {
             "twitter": twitter or None,
             "bluesky": bluesky or None,
             "linkedin": linkedin or None,

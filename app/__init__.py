@@ -1,15 +1,9 @@
 from flask import Flask, request, render_template
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_login import LoginManager
 from flask_mail import Mail
 from config import Config
+from app.extensions import db, migrate, login
 import os
 
-db = SQLAlchemy()
-migrate = Migrate()
-login = LoginManager()
-login.login_view = 'auth.login'
 mail = Mail()
 
 
@@ -31,20 +25,12 @@ def create_app(config_class=Config):
     from app.models.user import User
     @login.user_loader
     def load_user(id):
-        return User.query.get(id)
+        return db.session.get(User, id)
 
-    # Initialisation des routes
+    # Initialisation des routes. Each blueprint is registered once:
+    # Flask 2.1+ rejects a second registration under the same name.
     from app.routes import init_app as init_routes
     init_routes(app)
-
-    from app.routes import main
-    app.register_blueprint(main.bp)
-
-    from app.routes import auth
-    app.register_blueprint(auth.bp)
-
-    from app.routes import admin
-    app.register_blueprint(admin.bp)
 
     from app.cli import register_commands
     register_commands(app)

@@ -21,7 +21,7 @@ COPY . .
 
 # Set environment variables
 ENV FLASK_APP=run.py
-ENV FLASK_ENV=production
+ENV FLASK_DEBUG=0
 ENV PYTHONPATH=/app
 
 # Create entrypoint script

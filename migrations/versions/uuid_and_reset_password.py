@@ -28,15 +28,15 @@ def upgrade():
     
     # Generate UUIDs for existing users
     connection = op.get_bind()
-    users = connection.execute('SELECT id FROM "user"').fetchall()
+    users = connection.execute(sa.text('SELECT id FROM "user"')).fetchall()
     for user in users:
         new_uuid = str(uuid.uuid4())
         connection.execute(
-            'UPDATE "user" SET uuid = :uuid WHERE id = :id',
+            sa.text('UPDATE "user" SET uuid = :uuid WHERE id = :id'),
             {'uuid': new_uuid, 'id': user[0]}
         )
         connection.execute(
-            'UPDATE quiz_result SET user_uuid = :uuid WHERE user_id = :id',
+            sa.text('UPDATE quiz_result SET user_uuid = :uuid WHERE user_id = :id'),
             {'uuid': new_uuid, 'id': user[0]}
         )
     

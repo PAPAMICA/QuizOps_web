@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
 import os
+from sqlalchemy import inspect
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 import uuid
@@ -64,7 +65,8 @@ class User(db.Model):
     dev_to_username = db.Column(db.String(64))
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        # Werkzeug 3 defaults to scrypt, whose hash is longer than VARCHAR(128).
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
 
 class QuizResult(db.Model):
     __tablename__ = 'quiz_result'
@@ -127,7 +129,7 @@ def init_db():
     print('Création des tables...')
 
     # Vérification des tables créées
-    tables = db.engine.table_names()
+    tables = inspect(db.engine).get_table_names()
     print('\nTables créées:')
     for table in tables:
         print(f'- {table}')
